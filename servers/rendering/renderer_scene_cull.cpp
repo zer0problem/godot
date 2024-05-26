@@ -62,6 +62,30 @@ void RendererSceneCull::camera_initialize(RID p_rid) {
 	camera_owner.initialize_rid(p_rid);
 }
 
+void RendererSceneCull::camera_set_use_scissor(RID p_camera, bool p_use_scissor) {
+	Camera *camera = camera_owner.get_or_null(p_camera);
+	ERR_FAIL_NULL(camera);
+	camera->use_scissor = p_use_scissor;
+}
+
+void RendererSceneCull::camera_set_scissor_rect(RID p_camera, Rect2i p_scissor_rect) {
+	Camera *camera = camera_owner.get_or_null(p_camera);
+	ERR_FAIL_NULL(camera);
+	camera->scissor_rect = p_scissor_rect;
+}
+
+bool RendererSceneCull::camera_get_use_scissor(RID p_camera) const {
+	Camera *camera = camera_owner.get_or_null(p_camera);
+
+	return camera->use_scissor;
+}
+
+Rect2i RendererSceneCull::camera_get_scissor_rect(RID p_camera) const {
+	Camera *camera = camera_owner.get_or_null(p_camera);
+
+	return camera->scissor_rect;
+}
+
 void RendererSceneCull::camera_set_perspective(RID p_camera, float p_fovy_degrees, float p_z_near, float p_z_far) {
 	Camera *camera = camera_owner.get_or_null(p_camera);
 	ERR_FAIL_NULL(camera);
@@ -2323,6 +2347,7 @@ bool RendererSceneCull::_light_instance_update_shadow(Instance *p_instance, cons
 		case RS::LIGHT_OMNI: {
 			RS::LightOmniShadowMode shadow_mode = RSG::light_storage->light_omni_get_shadow_mode(p_instance->base);
 
+			// NOTE: TI - To self, focus on one type of omnilight shadows first, THEN do this IF you need to
 			if (shadow_mode == RS::LIGHT_OMNI_SHADOW_DUAL_PARABOLOID || !RSG::light_storage->light_instances_can_render_shadow_cube()) {
 				if (max_shadows_used + 2 > MAX_UPDATE_SHADOWS) {
 					return true;
@@ -2779,15 +2804,27 @@ void RendererSceneCull::_scene_cull(CullData &cull_data, InstanceCullResult &cul
 #define VIS_CHECK (visibility_check < 0 ? (visibility_check = (visibility_flags != InstanceData::FLAG_VISIBILITY_DEPENDENCY_NEEDS_CHECK || (VIS_RANGE_CHECK && VIS_PARENT_CHECK))) : visibility_check)
 #define OCCLUSION_CULLED (cull_data.occlusion_buffer != nullptr && (cull_data.scenario->instance_data[i].flags & InstanceData::FLAG_IGNORE_OCCLUSION_CULLING) == 0 && cull_data.occlusion_buffer->is_occluded(cull_data.scenario->instance_aabbs[i].bounds, cull_data.cam_transform.origin, inv_cam_transform, *cull_data.camera_matrix, z_near, cull_data.scenario->instance_data[i].occlusion_timeout))
 
+		// HACK: TI - TODO: TI - fix so culling works with shadow roots
+		if (LAYER_CHECK) {
+			if ((idata.flags & InstanceData::FLAG_BASE_TYPE_MASK) == RS::INSTANCE_LIGHT) {
+				cull_result.lights.push_back(idata.instance);
+				cull_result.light_instances.push_back(RID::from_uint64(idata.instance_data_rid));
+				if (cull_data.shadow_atlas.is_valid() && RSG::light_storage->light_has_shadow(idata.base_rid)) {
+					RSG::light_storage->light_instance_mark_visible(RID::from_uint64(idata.instance_data_rid));
+				}
+			}
+		}
+
 		if (!HIDDEN_BY_VISIBILITY_CHECKS) {
 			if ((LAYER_CHECK && IN_FRUSTUM(cull_data.cull->frustum) && VIS_CHECK && !OCCLUSION_CULLED) || (cull_data.scenario->instance_data[i].flags & InstanceData::FLAG_IGNORE_ALL_CULLING)) {
 				uint32_t base_type = idata.flags & InstanceData::FLAG_BASE_TYPE_MASK;
 				if (base_type == RS::INSTANCE_LIGHT) {
-					cull_result.lights.push_back(idata.instance);
-					cull_result.light_instances.push_back(RID::from_uint64(idata.instance_data_rid));
-					if (cull_data.shadow_atlas.is_valid() && RSG::light_storage->light_has_shadow(idata.base_rid)) {
-						RSG::light_storage->light_instance_mark_visible(RID::from_uint64(idata.instance_data_rid)); //mark it visible for shadow allocation later
-					}
+					// TODO: TI - Re-enable this if you figure out how to cull stuff
+					//cull_result.lights.push_back(idata.instance);
+					//cull_result.light_instances.push_back(RID::from_uint64(idata.instance_data_rid));
+					//if (cull_data.shadow_atlas.is_valid() && RSG::light_storage->light_has_shadow(idata.base_rid)) {
+					//	RSG::light_storage->light_instance_mark_visible(RID::from_uint64(idata.instance_data_rid)); //mark it visible for shadow allocation later
+					//}
 
 				} else if (base_type == RS::INSTANCE_REFLECTION_PROBE) {
 					if (cull_data.render_reflection_probe != idata.instance) {
@@ -3334,6 +3371,8 @@ void RendererSceneCull::_render_scene(const RendererSceneRender::CameraData *p_c
 			}
 
 			bool redraw = RSG::light_storage->shadow_atlas_update_light(p_shadow_atlas, light->instance, coverage, light->last_version);
+			// HACK: TI - Always redraw since I have not implemented check to see if ANY of the lights needs to update
+			redraw = true;
 
 			if (redraw && max_shadows_used < MAX_UPDATE_SHADOWS) {
 				//must redraw!

@@ -85,6 +85,10 @@ public:
 		RID attributes;
 		RID compositor;
 
+		// HACK: TI - Camera scissor
+		bool use_scissor;
+		Rect2i scissor_rect;
+
 		Transform3D transform;
 
 		Camera() {
@@ -103,6 +107,12 @@ public:
 
 	virtual RID camera_allocate();
 	virtual void camera_initialize(RID p_rid);
+
+	// HACK: TI - scissor rect stuff
+	virtual void camera_set_use_scissor(RID p_camera, bool p_use_scissor) override;
+	virtual void camera_set_scissor_rect(RID p_camera, Rect2i p_scissor_rect) override;
+	virtual bool camera_get_use_scissor(RID p_camera) const override;
+	virtual Rect2i camera_get_scissor_rect(RID p_camera) const override;
 
 	virtual void camera_set_perspective(RID p_camera, float p_fovy_degrees, float p_z_near, float p_z_far);
 	virtual void camera_set_orthogonal(RID p_camera, float p_size, float p_z_near, float p_z_far);

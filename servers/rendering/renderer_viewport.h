@@ -58,7 +58,7 @@ public:
 		Size2i internal_size;
 		Size2i size;
 		uint32_t view_count;
-		RID camera;
+		Vector<RID> cameras;
 		RID scenario;
 
 		RS::ViewportScaling3DMode scaling_3d_mode = RenderingServer::VIEWPORT_SCALING_3D_MODE_BILINEAR;
@@ -255,6 +255,7 @@ public:
 	bool viewport_is_environment_disabled(Viewport *viewport);
 
 	void viewport_attach_camera(RID p_viewport, RID p_camera);
+	void viewport_attach_additive_camera(RID p_viewport, RID p_camera);
 	void viewport_set_scenario(RID p_viewport, RID p_scenario);
 	void viewport_attach_canvas(RID p_viewport, RID p_canvas);
 	void viewport_remove_canvas(RID p_viewport, RID p_canvas);

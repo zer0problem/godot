@@ -379,6 +379,8 @@ public:
 	FUNC2(light_set_reverse_cull_face_mode, RID, bool)
 	FUNC2(light_set_bake_mode, RID, LightBakeMode)
 	FUNC2(light_set_max_sdfgi_cascade, RID, uint32_t)
+	// HACK: TI - Shadow root
+	FUNC2(light_set_shadow_root, RID, RID)
 
 	FUNC2(light_omni_set_shadow_mode, RID, LightOmniShadowMode)
 
@@ -588,6 +590,11 @@ public:
 	FUNC2(camera_set_camera_attributes, RID, RID)
 	FUNC2(camera_set_compositor, RID, RID)
 	FUNC2(camera_set_use_vertical_aspect, RID, bool)
+	// HACK: TI - Camera scissor hack
+	FUNC2(camera_set_use_scissor, RID, bool)
+	FUNC2(camera_set_scissor_rect, RID, Rect2i)
+	FUNC1RC(bool, camera_get_use_scissor, RID)
+	FUNC1RC(Rect2i, camera_get_scissor_rect, RID)
 
 	/* OCCLUDER */
 	FUNCRIDSPLIT(occluder)
@@ -612,6 +619,8 @@ public:
 	FUNC2(viewport_set_clear_mode, RID, ViewportClearMode)
 
 	FUNC3(viewport_attach_to_screen, RID, const Rect2 &, int)
+	// HACK: TI - Multiple cameras per viewport
+	FUNC2(viewport_attach_additive_camera, RID, RID)
 	FUNC2(viewport_set_render_direct_to_screen, RID, bool)
 
 	FUNC2(viewport_set_scaling_3d_mode, RID, ViewportScaling3DMode)

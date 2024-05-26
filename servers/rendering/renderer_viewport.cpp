@@ -245,7 +245,18 @@ void RendererViewport::_draw_3d(Viewport *p_viewport) {
 	}
 
 	float screen_mesh_lod_threshold = p_viewport->mesh_lod_threshold / float(p_viewport->size.width);
-	RSG::scene->render_camera(p_viewport->render_buffers, p_viewport->camera, p_viewport->scenario, p_viewport->self, p_viewport->internal_size, p_viewport->jitter_phase_count, screen_mesh_lod_threshold, p_viewport->shadow_atlas, xr_interface, &p_viewport->render_info);
+	// HACK: TI - Multiple cameras per viewport
+	for (RID camera : p_viewport->cameras) {
+		if (camera.is_null()) {
+			continue;
+		}
+
+		bool use_scissor = RS::get_singleton()->camera_get_use_scissor(camera);
+		Rect2i scissor_rect = RS::get_singleton()->camera_get_scissor_rect(camera);
+		p_viewport->render_buffers.ptr()->set_use_scissor(use_scissor);
+		p_viewport->render_buffers.ptr()->set_scissor_rect(scissor_rect);
+		RSG::scene->render_camera(p_viewport->render_buffers, camera, p_viewport->scenario, p_viewport->self, p_viewport->internal_size, p_viewport->jitter_phase_count, screen_mesh_lod_threshold, p_viewport->shadow_atlas, xr_interface, &p_viewport->render_info);
+	}
 
 	RENDER_TIMESTAMP("< Render 3D Scene");
 #endif // _3D_DISABLED
@@ -289,7 +300,13 @@ void RendererViewport::_draw_viewport(Viewport *p_viewport) {
 		}
 	}
 
-	bool can_draw_3d = RSG::scene->is_camera(p_viewport->camera) && !p_viewport->disable_3d;
+	int camera_count = 0;
+	for (RID camera : p_viewport->cameras) {
+		if (RSG::scene->is_camera(camera)) {
+			camera_count += 1;
+		}
+	}
+	bool can_draw_3d = (camera_count > 0) && !p_viewport->disable_3d;
 
 	if ((scenario_draw_canvas_bg || can_draw_3d) && !p_viewport->render_buffers.is_valid()) {
 		//wants to draw 3D but there is no render buffer, create
@@ -1142,7 +1159,18 @@ void RendererViewport::viewport_attach_camera(RID p_viewport, RID p_camera) {
 	Viewport *viewport = viewport_owner.get_or_null(p_viewport);
 	ERR_FAIL_NULL(viewport);
 
-	viewport->camera = p_camera;
+	// HACK: TI - Multiple camera hack
+	viewport->cameras.clear();
+	viewport->cameras.append(p_camera);
+}
+
+void RendererViewport::viewport_attach_additive_camera(RID p_viewport, RID p_camera) {
+	Viewport *viewport = viewport_owner.get_or_null(p_viewport);
+	ERR_FAIL_NULL(viewport);
+
+	if (!viewport->cameras.has(p_camera)) {
+		viewport->cameras.append(p_camera);
+	}
 }
 
 void RendererViewport::viewport_set_scenario(RID p_viewport, RID p_scenario) {

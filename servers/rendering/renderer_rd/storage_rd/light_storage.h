@@ -80,6 +80,9 @@ private:
 		RS::LightDirectionalShadowMode directional_shadow_mode = RS::LIGHT_DIRECTIONAL_SHADOW_ORTHOGONAL;
 		bool directional_blend_splits = false;
 		RS::LightDirectionalSkyMode directional_sky_mode = RS::LIGHT_DIRECTIONAL_SKY_MODE_LIGHT_AND_SKY;
+		// HACK: TI - Shadow root
+		RID shadow_root;
+
 		uint64_t version = 0;
 
 		Dependency dependency;
@@ -121,6 +124,12 @@ private:
 		uint64_t last_pass = 0;
 		uint32_t cull_mask = 0;
 		uint32_t light_directional_index = 0;
+		// HACK: TI - Store last pass cleared
+		uint64_t last_scene_clear_pass = 0;
+		// HACK: TI - Store last shadow render pass
+		uint64_t last_scene_shadow_render_pass[6] = { 0 };
+		// HACK: TI - Store max coverage to maintain coverage for extra cameras
+		float coverage_per_frame[4];
 
 		Rect2 directional_rect;
 
@@ -466,6 +475,35 @@ public:
 
 	virtual void light_free(RID p_rid) override;
 
+	// HACK: TI - Shadow root
+	virtual void light_set_shadow_root(RID p_light, RID p_parent_light) override;
+	virtual RID light_get_shadow_root(RID p_light) const override {
+		const Light *light = light_owner.get_or_null(p_light);
+		ERR_FAIL_NULL_V(light, RID());
+
+		return light->shadow_root;
+	}
+
+	// HACK: TI - get light shadow root light
+	LightInstance *get_real_light_hack(LightInstance *li) const {
+		RID light = hack_light_instance_to_light.get(li->self);
+		RID light_root = light_get_shadow_root(light);
+		if (light_root.is_valid()) {
+			RID light_root_instance = hack_light_to_light_instance.get(light_root);
+			li = light_instance_owner.get_or_null(light_root_instance);
+		}
+		return li;
+	}
+	RID get_real_light_hack(RID li) const {
+		RID light = hack_light_instance_to_light.get(li);
+		RID light_root = light_get_shadow_root(light);
+		if (light_root.is_valid()) {
+			RID light_root_instance = hack_light_to_light_instance.get(light_root);
+			li = light_root_instance;
+		}
+		return li;
+	}
+
 	virtual void light_set_color(RID p_light, const Color &p_color) override;
 	virtual void light_set_param(RID p_light, RS::LightParam p_param, float p_value) override;
 	virtual void light_set_shadow(RID p_light, bool p_enabled) override;
@@ -641,6 +679,10 @@ public:
 	_FORCE_INLINE_ Rect2 light_instance_get_shadow_atlas_rect(RID p_light_instance, RID p_shadow_atlas, Vector2i &r_omni_offset) {
 		ShadowAtlas *shadow_atlas = shadow_atlas_owner.get_or_null(p_shadow_atlas);
 		LightInstance *li = light_instance_owner.get_or_null(p_light_instance);
+
+		// HACK: TI - Access roots shadow instead
+		li = get_real_light_hack(li);
+
 		uint32_t key = shadow_atlas->shadow_owners[li->self];
 
 		uint32_t quadrant = (key >> QUADRANT_SHIFT) & 0x3;
@@ -675,6 +717,8 @@ public:
 	}
 
 	_FORCE_INLINE_ float light_instance_get_shadow_texel_size(RID p_light_instance, RID p_shadow_atlas) {
+		// HACK: TI - Access roots shadow instead
+		p_light_instance = get_real_light_hack(p_light_instance);
 #ifdef DEBUG_ENABLED
 		LightInstance *li = light_instance_owner.get_or_null(p_light_instance);
 		ERR_FAIL_COND_V(!li->shadow_atlases.has(p_shadow_atlas), 0);
@@ -697,6 +741,10 @@ public:
 
 	_FORCE_INLINE_ Projection light_instance_get_shadow_camera(RID p_light_instance, int p_index) {
 		LightInstance *li = light_instance_owner.get_or_null(p_light_instance);
+
+		// HACK: TI - Access roots shadow instead
+		li = get_real_light_hack(li);
+
 		return li->shadow_transform[p_index].camera;
 	}
 
@@ -762,6 +810,25 @@ public:
 		return li->last_scene_shadow_pass;
 	}
 
+	// HACK: TI - clear pass
+	_FORCE_INLINE_ void light_instance_set_clear_pass(RID p_light_instance, uint64_t p_frame) {
+		LightInstance *li = light_instance_owner.get_or_null(p_light_instance);
+		li->last_scene_clear_pass = p_frame;
+	}
+	_FORCE_INLINE_ uint64_t light_instance_get_clear_pass(RID p_light_instance) {
+		LightInstance *li = light_instance_owner.get_or_null(p_light_instance);
+		return li->last_scene_clear_pass;
+	}
+	// HACK: TI - shadow_render pass
+	_FORCE_INLINE_ void light_instance_set_shadow_render_pass(RID p_light_instance, int p_pass, uint64_t p_frame) {
+		LightInstance *li = light_instance_owner.get_or_null(p_light_instance);
+		li->last_scene_shadow_render_pass[p_pass] = p_frame;
+	}
+	_FORCE_INLINE_ uint64_t light_instance_get_shadow_render_pass(RID p_light_instance, int p_pass) {
+		LightInstance *li = light_instance_owner.get_or_null(p_light_instance);
+		return li->last_scene_shadow_render_pass[p_pass];
+	}
+
 	_FORCE_INLINE_ ForwardID light_instance_get_forward_id(RID p_light_instance) {
 		LightInstance *li = light_instance_owner.get_or_null(p_light_instance);
 		return li->forward_id;
@@ -780,6 +847,24 @@ public:
 	_FORCE_INLINE_ Rect2 light_instance_get_directional_rect(RID p_light_instance) {
 		LightInstance *li = light_instance_owner.get_or_null(p_light_instance);
 		return li->directional_rect;
+	}
+
+	// HACK: TI - begin light <-> instance connection
+private:
+	HashMap<RID, RID> hack_light_to_light_instance;
+	HashMap<RID, RID> hack_light_instance_to_light;
+public:
+	virtual RID light_get_light_instance(RID p_light) const override {
+		if (hack_light_to_light_instance.has(p_light)) {
+			return hack_light_to_light_instance.get(p_light);
+		}
+		return RID();
+	}
+	virtual RID light_instance_get_light(RID p_light_instance) const override {
+		if (hack_light_instance_to_light.has(p_light_instance)) {
+			return hack_light_instance_to_light.get(p_light_instance);
+		}
+		return RID();
 	}
 
 	/* LIGHT DATA */
@@ -1031,11 +1116,15 @@ public:
 	virtual void shadow_atlas_set_quadrant_subdivision(RID p_atlas, int p_quadrant, int p_subdivision) override;
 	virtual bool shadow_atlas_update_light(RID p_atlas, RID p_light_instance, float p_coverage, uint64_t p_light_version) override;
 	_FORCE_INLINE_ bool shadow_atlas_owns_light_instance(RID p_atlas, RID p_light_instance) {
+		// HACK: TI - Get real light
+		p_light_instance = get_real_light_hack(p_light_instance);
 		ShadowAtlas *atlas = shadow_atlas_owner.get_or_null(p_atlas);
 		ERR_FAIL_NULL_V(atlas, false);
 		return atlas->shadow_owners.has(p_light_instance);
 	}
 	_FORCE_INLINE_ uint32_t shadow_atlas_get_light_instance_key(RID p_atlas, RID p_light_instance) {
+		// HACK: TI - Get real light
+		p_light_instance = get_real_light_hack(p_light_instance);
 		ShadowAtlas *atlas = shadow_atlas_owner.get_or_null(p_atlas);
 		ERR_FAIL_NULL_V(atlas, -1);
 		return atlas->shadow_owners[p_light_instance];

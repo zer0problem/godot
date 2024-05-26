@@ -204,6 +204,13 @@ ShaderTypes::ShaderTypes() {
 	shader_modes[RS::SHADER_SPATIAL].functions["light"].built_ins["OUTPUT_IS_SRGB"] = constt(ShaderLanguage::TYPE_BOOL);
 	shader_modes[RS::SHADER_SPATIAL].functions["light"].built_ins["ALPHA"] = ShaderLanguage::TYPE_FLOAT;
 
+	// HACK: TI - Light mask exposed
+	shader_modes[RS::SHADER_SPATIAL].functions["light"].built_ins["LIGHT_MASK"] = constt(ShaderLanguage::TYPE_UINT);
+	// HACK: TI - Light camera visible layers exposed
+	shader_modes[RS::SHADER_SPATIAL].functions["light"].built_ins["LIGHT_CAMERA_VISIBLE_LAYERS"] = constt(ShaderLanguage::TYPE_UINT);
+	// HACK: TI - Light vertex exposed
+	shader_modes[RS::SHADER_SPATIAL].functions["light"].built_ins["LIGHT_VIEW_VERTEX"] = constt(ShaderLanguage::TYPE_VEC3);
+
 	shader_modes[RS::SHADER_SPATIAL].functions["light"].can_discard = true;
 	shader_modes[RS::SHADER_SPATIAL].functions["light"].main_function = true;
 

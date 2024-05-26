@@ -172,6 +172,16 @@ void LightStorage::light_free(RID p_rid) {
 	light_owner.free(p_rid);
 }
 
+void LightStorage::light_set_shadow_root(RID p_light, RID p_parent_light) {
+	Light *light = light_owner.get_or_null(p_light);
+	ERR_FAIL_NULL(light);
+
+	light->shadow_root = p_parent_light;
+
+	light->version++;
+	light->dependency.changed_notify(Dependency::DEPENDENCY_CHANGED_LIGHT);
+}
+
 void LightStorage::light_set_color(RID p_light, const Color &p_color) {
 	Light *light = light_owner.get_or_null(p_light);
 	ERR_FAIL_NULL(light);
@@ -432,6 +442,9 @@ RID LightStorage::light_instance_create(RID p_light) {
 
 	LightInstance *light_instance = light_instance_owner.get_or_null(li);
 
+	hack_light_to_light_instance.insert(p_light, li);
+	hack_light_instance_to_light.insert(li, p_light);
+
 	light_instance->self = li;
 	light_instance->light = p_light;
 	light_instance->light_type = light_get_type(p_light);
@@ -444,6 +457,9 @@ RID LightStorage::light_instance_create(RID p_light) {
 
 void LightStorage::light_instance_free(RID p_light) {
 	LightInstance *light_instance = light_instance_owner.get_or_null(p_light);
+
+	hack_light_to_light_instance.erase(hack_light_instance_to_light.get(p_light));
+	hack_light_instance_to_light.erase(p_light);
 
 	//remove from shadow atlases..
 	for (const RID &E : light_instance->shadow_atlases) {
@@ -2232,6 +2248,21 @@ bool LightStorage::_shadow_atlas_find_omni_shadows(ShadowAtlas *shadow_atlas, in
 }
 
 bool LightStorage::shadow_atlas_update_light(RID p_atlas, RID p_light_instance, float p_coverage, uint64_t p_light_version) {
+	RID real_light = get_real_light_hack(p_light_instance);
+	// HACK: TI - Store coverage for main light
+	if (real_light != p_light_instance) {
+		LightInstance *li = light_instance_owner.get_or_null(real_light);
+		ERR_FAIL_NULL_V(li, false);
+
+		const uint64_t frame = RSG::rasterizer->get_frame_number();
+
+		if (li->coverage_per_frame[frame % 4] < p_coverage) {
+			li->coverage_per_frame[frame % 4] = p_coverage;
+		}
+
+		return true;
+	}
+
 	ShadowAtlas *shadow_atlas = shadow_atlas_owner.get_or_null(p_atlas);
 	ERR_FAIL_NULL_V(shadow_atlas, false);
 
@@ -2241,6 +2272,15 @@ bool LightStorage::shadow_atlas_update_light(RID p_atlas, RID p_light_instance, 
 	if (shadow_atlas->size == 0 || shadow_atlas->smallest_subdiv == 0) {
 		return false;
 	}
+
+	// HACK: TI - Get existing coverage from other cameras
+	const uint64_t frame = RSG::rasterizer->get_frame_number();
+	for (size_t i = 0; i < 4; ++i) {
+		if (li->coverage_per_frame[i] > p_coverage) {
+			p_coverage = li->coverage_per_frame[i];
+		}
+	}
+	li->coverage_per_frame[(frame + 1) % 4] = 0.0;
 
 	uint32_t quad_size = shadow_atlas->size >> 1;
 	int desired_fit = MIN(quad_size / shadow_atlas->smallest_subdiv, next_power_of_2(quad_size * p_coverage));

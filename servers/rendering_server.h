@@ -519,6 +519,9 @@ public:
 	virtual void light_set_distance_fade(RID p_light, bool p_enabled, float p_begin, float p_shadow, float p_length) = 0;
 	virtual void light_set_reverse_cull_face_mode(RID p_light, bool p_enabled) = 0;
 
+	// HACK: TI - Shadow root
+	virtual void light_set_shadow_root(RID p_light, RID p_parent_light) = 0;
+
 	enum LightBakeMode {
 		LIGHT_BAKE_DISABLED,
 		LIGHT_BAKE_STATIC,
@@ -849,6 +852,12 @@ public:
 	virtual void camera_set_compositor(RID p_camera, RID p_compositor) = 0;
 	virtual void camera_set_use_vertical_aspect(RID p_camera, bool p_enable) = 0;
 
+	// HACK: TI - Camera set scissors
+	virtual void camera_set_use_scissor(RID p_camera, bool p_use_scissor) = 0;
+	virtual void camera_set_scissor_rect(RID p_camera, Rect2i p_scissor_rect) = 0;
+	virtual bool camera_get_use_scissor(RID p_camera) const = 0;
+	virtual Rect2i camera_get_scissor_rect(RID p_camera) const = 0;
+
 	/* VIEWPORT API */
 
 	enum CanvasItemTextureFilter {
@@ -879,6 +888,9 @@ public:
 		VIEWPORT_SCALING_3D_MODE_MAX,
 		VIEWPORT_SCALING_3D_MODE_OFF = 255, // for internal use only
 	};
+
+	// HACK: TI - Viewport attach additive viewports
+	virtual void viewport_attach_additive_camera(RID p_viewport, RID p_camera) = 0;
 
 	virtual void viewport_set_use_xr(RID p_viewport, bool p_use_xr) = 0;
 	virtual void viewport_set_size(RID p_viewport, int p_width, int p_height) = 0;

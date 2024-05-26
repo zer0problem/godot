@@ -51,6 +51,13 @@ public:
 
 	virtual void light_free(RID p_rid) = 0;
 
+	// HACK: TI - Lights shadow root
+	virtual void light_set_shadow_root(RID p_light, RID p_parent_light) = 0;
+	virtual RID light_get_shadow_root(RID p_light) const = 0;
+	// HACK: TI - light <-> instance connection
+	virtual RID light_get_light_instance(RID p_light) const = 0;
+	virtual RID light_instance_get_light(RID p_light_instance) const = 0;
+
 	virtual void light_set_color(RID p_light, const Color &p_color) = 0;
 	virtual void light_set_param(RID p_light, RS::LightParam p_param, float p_value) = 0;
 	virtual void light_set_shadow(RID p_light, bool p_enabled) = 0;

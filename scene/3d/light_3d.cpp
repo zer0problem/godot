@@ -64,6 +64,20 @@ bool Light3D::has_shadow() const {
 	return shadow;
 }
 
+void Light3D::set_shadow_root(RID p_root_rid) {
+	shadow_root = p_root_rid;
+
+	RS::get_singleton()->light_set_shadow_root(light, shadow_root);
+}
+
+bool Light3D::has_shadow_root() const {
+	return shadow_root.is_valid();
+}
+
+RID Light3D::get_light_rid() const {
+	return light;
+}
+
 void Light3D::set_negative(bool p_enable) {
 	negative = p_enable;
 	RS::get_singleton()->light_set_negative(light, p_enable);
@@ -329,6 +343,10 @@ void Light3D::_bind_methods() {
 
 	ClassDB::bind_method(D_METHOD("set_shadow", "enabled"), &Light3D::set_shadow);
 	ClassDB::bind_method(D_METHOD("has_shadow"), &Light3D::has_shadow);
+
+	ClassDB::bind_method(D_METHOD("set_shadow_root", "shadow_root"), &Light3D::set_shadow_root);
+	ClassDB::bind_method(D_METHOD("has_shadow_root"), &Light3D::has_shadow_root);
+	ClassDB::bind_method(D_METHOD("get_light_rid"), &Light3D::get_light_rid);
 
 	ClassDB::bind_method(D_METHOD("set_negative", "enabled"), &Light3D::set_negative);
 	ClassDB::bind_method(D_METHOD("is_negative"), &Light3D::is_negative);

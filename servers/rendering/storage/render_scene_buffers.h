@@ -97,6 +97,11 @@ public:
 class RenderSceneBuffers : public RefCounted {
 	GDCLASS(RenderSceneBuffers, RefCounted);
 
+private:
+	// HACK: TI - Use scissors
+	bool use_scissor = false;
+	Rect2i scissor_rect;
+
 protected:
 	static void _bind_methods();
 
@@ -105,6 +110,12 @@ public:
 	virtual ~RenderSceneBuffers(){};
 
 	virtual void configure(const RenderSceneBuffersConfiguration *p_config) = 0;
+
+	// HACK: TI - For scissor rect
+	void set_use_scissor(bool p_use_scissor) { use_scissor = p_use_scissor; }
+	bool get_use_scissor() const { return use_scissor; }
+	void set_scissor_rect(Rect2i p_scissor_rect) { scissor_rect = p_scissor_rect; }
+	Rect2i get_scissor_rect() const { return scissor_rect; }
 
 	// for those settings that are unlikely to require buffers to be recreated, we'll add setters
 	virtual void set_fsr_sharpness(float p_fsr_sharpness) = 0;

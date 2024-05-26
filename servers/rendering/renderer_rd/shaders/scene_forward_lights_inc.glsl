@@ -58,6 +58,18 @@ void light_compute(vec3 N, vec3 L, vec3 V, float A, vec3 light_color, bool is_di
 #ifdef LIGHT_ANISOTROPY_USED
 		vec3 B, vec3 T, float anisotropy,
 #endif
+// HACK: TI - Light mask exposed
+#ifdef LIGHT_MASK_USED
+		uint light_mask,
+#endif
+// HACK: TI - Light mask exposed
+#ifdef LIGHT_CAMERA_VISIBLE_LAYERS_USED
+		uint light_camera_visible_layers,
+#endif
+// HACK: TI - Light vertex exposed
+#ifdef LIGHT_VIEW_VERTEX_USED
+		vec3 light_vertex,
+#endif
 		inout vec3 diffuse_light, inout vec3 specular_light) {
 
 	vec4 orms_unpacked = unpackUnorm4x8(orms);
@@ -565,6 +577,12 @@ void light_process_omni(uint idx, vec3 vertex, vec3 eye_vec, vec3 normal, vec3 v
 #ifdef LIGHT_ANISOTROPY_USED
 		vec3 binormal, vec3 tangent, float anisotropy,
 #endif
+#ifdef LIGHT_MASK_USED
+		uint light_mask,
+#endif
+#ifdef LIGHT_CAMERA_VISIBLE_LAYERS_USED
+		uint light_camera_visible_layers,
+#endif
 		inout vec3 diffuse_light, inout vec3 specular_light) {
 	vec3 light_rel_vec = omni_lights.data[idx].position - vertex;
 	float light_length = length(light_rel_vec);
@@ -689,6 +707,15 @@ void light_process_omni(uint idx, vec3 vertex, vec3 eye_vec, vec3 normal, vec3 v
 #ifdef LIGHT_ANISOTROPY_USED
 			binormal, tangent, anisotropy,
 #endif
+#ifdef LIGHT_MASK_USED
+			light_mask,
+#endif
+#ifdef LIGHT_CAMERA_VISIBLE_LAYERS_USED
+			light_camera_visible_layers,
+#endif
+#ifdef LIGHT_VIEW_VERTEX_USED
+			vertex,
+#endif
 			diffuse_light,
 			specular_light);
 }
@@ -806,6 +833,12 @@ void light_process_spot(uint idx, vec3 vertex, vec3 eye_vec, vec3 normal, vec3 v
 #ifdef LIGHT_ANISOTROPY_USED
 		vec3 binormal, vec3 tangent, float anisotropy,
 #endif
+#ifdef LIGHT_MASK_USED
+		uint light_mask,
+#endif
+#ifdef LIGHT_CAMERA_VISIBLE_LAYERS_USED
+		uint light_camera_visible_layers,
+#endif
 		inout vec3 diffuse_light,
 		inout vec3 specular_light) {
 	vec3 light_rel_vec = spot_lights.data[idx].position - vertex;
@@ -895,6 +928,15 @@ void light_process_spot(uint idx, vec3 vertex, vec3 eye_vec, vec3 normal, vec3 v
 #endif
 #ifdef LIGHT_ANISOTROPY_USED
 			binormal, tangent, anisotropy,
+#endif
+#ifdef LIGHT_MASK_USED
+			light_mask,
+#endif
+#ifdef LIGHT_CAMERA_VISIBLE_LAYERS_USED
+			light_camera_visible_layers,
+#endif
+#ifdef LIGHT_VIEW_VERTEX_USED
+			vertex,
 #endif
 			diffuse_light, specular_light);
 }

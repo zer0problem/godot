@@ -192,6 +192,14 @@ Projection Camera3D::get_camera_projection() const {
 	return _get_camera_projection(_near);
 }
 
+void Camera3D::set_use_scissor(bool p_use_scissor) {
+	RenderingServer::get_singleton()->camera_set_use_scissor(camera, p_use_scissor);
+}
+
+void Camera3D::set_scissor_rect(Rect2i p_scissor_rect) {
+	RenderingServer::get_singleton()->camera_set_scissor_rect(camera, p_scissor_rect);
+}
+
 void Camera3D::set_perspective(real_t p_fovy_degrees, real_t p_z_near, real_t p_z_far) {
 	if (!force_change && fov == p_fovy_degrees && p_z_near == _near && p_z_far == _far && mode == PROJECTION_PERSPECTIVE) {
 		return;
@@ -515,6 +523,11 @@ void Camera3D::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("unproject_position", "world_point"), &Camera3D::unproject_position);
 	ClassDB::bind_method(D_METHOD("is_position_behind", "world_point"), &Camera3D::is_position_behind);
 	ClassDB::bind_method(D_METHOD("project_position", "screen_point", "z_depth"), &Camera3D::project_position);
+
+	// HACK: TI - Camera scissor
+	ClassDB::bind_method(D_METHOD("set_use_scissor", "use_scissor"), &Camera3D::set_use_scissor);
+	ClassDB::bind_method(D_METHOD("set_scissor_rect", "rect"), &Camera3D::set_scissor_rect);
+
 	ClassDB::bind_method(D_METHOD("set_perspective", "fov", "z_near", "z_far"), &Camera3D::set_perspective);
 	ClassDB::bind_method(D_METHOD("set_orthogonal", "size", "z_near", "z_far"), &Camera3D::set_orthogonal);
 	ClassDB::bind_method(D_METHOD("set_frustum", "size", "offset", "z_near", "z_far"), &Camera3D::set_frustum);

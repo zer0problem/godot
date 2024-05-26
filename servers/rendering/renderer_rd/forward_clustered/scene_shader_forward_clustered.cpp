@@ -659,6 +659,16 @@ void SceneShaderForwardClustered::init(const String p_defines) {
 		actions.renames["DIFFUSE_LIGHT"] = "diffuse_light";
 		actions.renames["SPECULAR_LIGHT"] = "specular_light";
 
+		// HACK: TI - Light mask exposed in light shader
+		actions.renames["LIGHT_MASK"] = "light_mask";
+		actions.usage_defines["LIGHT_MASK"] = "#define LIGHT_MASK_USED\n";
+		// HACK: TI - Light camera visible layers exposed in light shader
+		actions.renames["LIGHT_CAMERA_VISIBLE_LAYERS"] = "light_camera_visible_layers";
+		actions.usage_defines["LIGHT_CAMERA_VISIBLE_LAYERS"] = "#define LIGHT_CAMERA_VISIBLE_LAYERS_USED\n";
+		// HACK: TI - Light vertex exposed in light shader
+		actions.renames["LIGHT_VIEW_VERTEX"] = "light_vertex";
+		actions.usage_defines["LIGHT_VIEW_VERTEX"] = "#define LIGHT_VIEW_VERTEX_USED\n";
+
 		actions.usage_defines["NORMAL"] = "#define NORMAL_USED\n";
 		actions.usage_defines["TANGENT"] = "#define TANGENT_USED\n";
 		actions.usage_defines["BINORMAL"] = "@TANGENT";

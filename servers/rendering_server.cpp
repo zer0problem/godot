@@ -2764,6 +2764,9 @@ void RenderingServer::_bind_methods() {
 
 	/* VIEWPORT */
 
+	// HACK: TI - Additive viewports
+	ClassDB::bind_method(D_METHOD("viewport_attach_additive_camera", "viewport", "camera"), &RenderingServer::viewport_attach_additive_camera);
+
 	ClassDB::bind_method(D_METHOD("viewport_create"), &RenderingServer::viewport_create);
 	ClassDB::bind_method(D_METHOD("viewport_set_use_xr", "viewport", "use_xr"), &RenderingServer::viewport_set_use_xr);
 	ClassDB::bind_method(D_METHOD("viewport_set_size", "viewport", "width", "height"), &RenderingServer::viewport_set_size);

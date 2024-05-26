@@ -2088,6 +2088,15 @@ void fragment_shader(in SceneData scene_data) {
 					binormal,
 					tangent, anisotropy,
 #endif
+#ifdef LIGHT_MASK_USED
+					directional_lights.data[i].mask,
+#endif
+#ifdef LIGHT_CAMERA_VISIBLE_LAYERS_USED
+					scene_data.camera_visible_layers,
+#endif
+#ifdef LIGHT_VIEW_VERTEX_USED
+					vertex,
+#endif
 					diffuse_light,
 					specular_light);
 		}
@@ -2158,6 +2167,12 @@ void fragment_shader(in SceneData scene_data) {
 #endif
 #ifdef LIGHT_ANISOTROPY_USED
 						tangent, binormal, anisotropy,
+#endif
+#ifdef LIGHT_MASK_USED
+						omni_lights.data[light_index].mask,
+#endif
+#ifdef LIGHT_CAMERA_VISIBLE_LAYERS_USED
+						scene_data.camera_visible_layers,
 #endif
 						diffuse_light, specular_light);
 			}
@@ -2231,6 +2246,12 @@ void fragment_shader(in SceneData scene_data) {
 #ifdef LIGHT_ANISOTROPY_USED
 						tangent,
 						binormal, anisotropy,
+#endif
+#ifdef LIGHT_MASK_USED
+						spot_lights.data[light_index].mask,
+#endif
+#ifdef LIGHT_CAMERA_VISIBLE_LAYERS_USED
+						scene_data.camera_visible_layers,
 #endif
 						diffuse_light, specular_light);
 			}

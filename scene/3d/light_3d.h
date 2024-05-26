@@ -87,6 +87,9 @@ private:
 	Color correlated_color = Color(1.0, 1.0, 1.0);
 	float temperature = 6500.0;
 
+	// HACK: TI - Hacked together shared shadows..
+	RID shadow_root;
+
 	// bind helpers
 
 	virtual void owner_changed_notify() override;
@@ -111,6 +114,11 @@ public:
 
 	void set_shadow(bool p_enable);
 	bool has_shadow() const;
+
+	// HACK: TI - Shared shadow roots
+	void set_shadow_root(RID p_root_rid);
+	bool has_shadow_root() const;
+	RID get_light_rid() const;
 
 	void set_negative(bool p_enable);
 	bool is_negative() const;

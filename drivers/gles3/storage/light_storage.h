@@ -318,6 +318,14 @@ public:
 
 	virtual void light_free(RID p_rid) override;
 
+	// HACK: TI - Not implementing this for gles3, don't care
+	// HACK: TI - Lights shadow root
+	virtual void light_set_shadow_root(RID p_light, RID p_parent_light) override {}
+	virtual RID light_get_shadow_root(RID p_light) const override { return RID(); }
+	// HACK: TI - light <-> instance connection
+	virtual RID light_get_light_instance(RID p_light) const override { return RID(); }
+	virtual RID light_instance_get_light(RID p_light_instance) const override { return RID(); }
+
 	virtual void light_set_color(RID p_light, const Color &p_color) override;
 	virtual void light_set_param(RID p_light, RS::LightParam p_param, float p_value) override;
 	virtual void light_set_shadow(RID p_light, bool p_enabled) override;
