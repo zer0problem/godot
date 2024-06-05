@@ -2668,6 +2668,12 @@ void RendererSceneCull::render_camera(const Ref<RenderSceneBuffers> &p_render_bu
 	// For now just cull on the first camera
 	RendererSceneOcclusionCull::get_singleton()->buffer_update(p_viewport, camera_data.main_transform, camera_data.main_projection, camera_data.is_orthogonal);
 
+	bool use_scissor = RS::get_singleton()->camera_get_use_scissor(p_camera);
+	Rect2i scissor_rect = RS::get_singleton()->camera_get_scissor_rect(p_camera);
+
+	camera_data.use_scissor = use_scissor;
+	camera_data.scissor_rect = scissor_rect;
+
 	_render_scene(&camera_data, p_render_buffers, environment, camera->attributes, compositor, camera->visible_layers, p_scenario, p_viewport, p_shadow_atlas, RID(), -1, p_screen_mesh_lod_threshold, true, r_render_info);
 #endif
 }
@@ -3179,7 +3185,8 @@ void RendererSceneCull::_render_scene(const RendererSceneRender::CameraData *p_c
 		}
 	}
 
-	scene_cull_result.clear();
+	InstanceCullResult scene_cull_result;
+	scene_cull_result.init(&rid_cull_page_pool, &geometry_instance_cull_page_pool, &instance_cull_page_pool);
 
 	{
 		uint64_t cull_from = 0;
@@ -3608,6 +3615,9 @@ bool RendererSceneCull::_render_reflection_probe_step(Instance *p_instance, int 
 void RendererSceneCull::render_probes() {
 	/* REFLECTION PROBES */
 
+	InstanceCullResult scene_cull_result;
+	scene_cull_result.init(&rid_cull_page_pool, &geometry_instance_cull_page_pool, &instance_cull_page_pool);
+
 	SelfList<InstanceReflectionProbeData> *ref_probe = reflection_probe_render_list.first();
 	Vector<SelfList<InstanceReflectionProbeData> *> done_list;
 
@@ -3858,6 +3868,9 @@ void RendererSceneCull::render_probes() {
 }
 
 void RendererSceneCull::render_particle_colliders() {
+	InstanceCullResult scene_cull_result;
+	scene_cull_result.init(&rid_cull_page_pool, &geometry_instance_cull_page_pool, &instance_cull_page_pool);
+
 	while (heightfield_particle_colliders_update_list.begin()) {
 		Instance *hfpc = *heightfield_particle_colliders_update_list.begin();
 
@@ -4293,7 +4306,6 @@ RendererSceneCull::RendererSceneCull() {
 		render_sdfgi_data[i].instances.set_page_pool(&geometry_instance_cull_page_pool);
 	}
 
-	scene_cull_result.init(&rid_cull_page_pool, &geometry_instance_cull_page_pool, &instance_cull_page_pool);
 	scene_cull_result_threads.resize(WorkerThreadPool::get_singleton()->get_thread_count());
 	for (InstanceCullResult &thread : scene_cull_result_threads) {
 		thread.init(&rid_cull_page_pool, &geometry_instance_cull_page_pool, &instance_cull_page_pool);
@@ -4324,7 +4336,6 @@ RendererSceneCull::~RendererSceneCull() {
 		render_sdfgi_data[i].instances.reset();
 	}
 
-	scene_cull_result.reset();
 	for (InstanceCullResult &thread : scene_cull_result_threads) {
 		thread.reset();
 	}

@@ -64,6 +64,12 @@ void RendererEnvironmentStorage::environment_set_background(RID p_env, RS::Envir
 	env->background = p_bg;
 }
 
+void RendererEnvironmentStorage::environment_set_depth_mode(RID p_env, RS::EnvironmentDepthMode p_dm) {
+	Environment *env = environment_owner.get_or_null(p_env);
+	ERR_FAIL_NULL(env);
+	env->depth_mode = p_dm;
+}
+
 void RendererEnvironmentStorage::environment_set_sky(RID p_env, RID p_sky) {
 	Environment *env = environment_owner.get_or_null(p_env);
 	ERR_FAIL_NULL(env);
@@ -115,6 +121,12 @@ RS::EnvironmentBG RendererEnvironmentStorage::environment_get_background(RID p_e
 	Environment *env = environment_owner.get_or_null(p_env);
 	ERR_FAIL_NULL_V(env, RS::ENV_BG_CLEAR_COLOR);
 	return env->background;
+}
+
+RS::EnvironmentDepthMode RendererEnvironmentStorage::environment_get_depth_mode(RID p_env) const {
+	Environment *env = environment_owner.get_or_null(p_env);
+	ERR_FAIL_NULL_V(env, RS::ENV_DEPTH_MODE_CLEAR);
+	return env->depth_mode;
 }
 
 RID RendererEnvironmentStorage::environment_get_sky(RID p_env) const {

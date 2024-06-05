@@ -1074,6 +1074,10 @@ void RendererSceneRenderRD::render_scene(const Ref<RenderSceneBuffers> &p_render
 		scene_data.taa_jitter = p_camera_data->taa_jitter;
 		scene_data.main_cam_transform = p_camera_data->main_transform;
 
+		// HACK: TI - Use scissor
+		scene_data.use_scissor = p_camera_data->use_scissor;
+		scene_data.scissor_rect = p_camera_data->scissor_rect;
+
 		scene_data.view_count = p_camera_data->view_count;
 		for (uint32_t v = 0; v < p_camera_data->view_count; v++) {
 			scene_data.view_eye_offset[v] = p_camera_data->view_offset[v].origin;

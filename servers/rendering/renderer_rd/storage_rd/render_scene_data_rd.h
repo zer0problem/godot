@@ -51,6 +51,10 @@ public:
 	uint32_t camera_visible_layers;
 	bool cam_orthogonal = false;
 
+	// HACK: TI - Use scissor
+	bool use_scissor;
+	Rect2i scissor_rect;
+
 	// For billboards to cast correct shadows.
 	Transform3D main_cam_transform;
 

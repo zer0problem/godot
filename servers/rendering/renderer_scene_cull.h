@@ -1011,7 +1011,6 @@ public:
 		}
 	};
 
-	InstanceCullResult scene_cull_result;
 	LocalVector<InstanceCullResult> scene_cull_result_threads;
 
 	RendererSceneRender::RenderShadowData render_shadow_data[MAX_UPDATE_SHADOWS];
@@ -1221,6 +1220,7 @@ public:
 
 	// Background
 	PASS2(environment_set_background, RID, RS::EnvironmentBG)
+	PASS2(environment_set_depth_mode, RID, RS::EnvironmentDepthMode)
 	PASS2(environment_set_sky, RID, RID)
 	PASS2(environment_set_sky_custom_fov, RID, float)
 	PASS2(environment_set_sky_orientation, RID, const Basis &)

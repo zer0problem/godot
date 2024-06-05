@@ -49,6 +49,12 @@ public:
 		BG_MAX
 	};
 
+	enum DepthMode {
+		DEPTH_MODE_CLEAR,
+		DEPTH_MODE_KEEP,
+		DEPTH_MODE_MAX
+	};
+
 	enum AmbientSource {
 		AMBIENT_SOURCE_BG,
 		AMBIENT_SOURCE_DISABLED,
@@ -93,6 +99,8 @@ private:
 
 	// Background
 	BGMode bg_mode = BG_CLEAR_COLOR;
+	// HACK: TI - depth clear/keep
+	DepthMode depth_mode = DEPTH_MODE_CLEAR;
 	Ref<Sky> bg_sky;
 	float bg_sky_custom_fov = 0.0;
 	Vector3 bg_sky_rotation;
@@ -235,6 +243,8 @@ public:
 	// Background
 	void set_background(BGMode p_bg);
 	BGMode get_background() const;
+	void set_depth_mode(DepthMode p_bg);
+	DepthMode get_depth_mode() const;
 	void set_sky(const Ref<Sky> &p_sky);
 	Ref<Sky> get_sky() const;
 	void set_sky_custom_fov(float p_scale);
@@ -447,6 +457,7 @@ public:
 };
 
 VARIANT_ENUM_CAST(Environment::BGMode)
+VARIANT_ENUM_CAST(Environment::DepthMode)
 VARIANT_ENUM_CAST(Environment::AmbientSource)
 VARIANT_ENUM_CAST(Environment::ReflectionSource)
 VARIANT_ENUM_CAST(Environment::ToneMapper)

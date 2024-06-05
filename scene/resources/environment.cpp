@@ -53,6 +53,16 @@ Environment::BGMode Environment::get_background() const {
 	return bg_mode;
 }
 
+void Environment::set_depth_mode(DepthMode p_dm) {
+	depth_mode = p_dm;
+	RS::get_singleton()->environment_set_depth_mode(environment, RS::EnvironmentDepthMode(p_dm));
+	notify_property_list_changed();
+}
+
+Environment::DepthMode Environment::get_depth_mode() const {
+	return depth_mode;
+}
+
 void Environment::set_sky(const Ref<Sky> &p_sky) {
 	bg_sky = p_sky;
 	RID sb_rid;
@@ -1215,6 +1225,8 @@ void Environment::_bind_methods() {
 
 	ClassDB::bind_method(D_METHOD("set_background", "mode"), &Environment::set_background);
 	ClassDB::bind_method(D_METHOD("get_background"), &Environment::get_background);
+	ClassDB::bind_method(D_METHOD("set_depth_mode", "mode"), &Environment::set_depth_mode);
+	ClassDB::bind_method(D_METHOD("get_depth_mode"), &Environment::get_depth_mode);
 	ClassDB::bind_method(D_METHOD("set_sky", "sky"), &Environment::set_sky);
 	ClassDB::bind_method(D_METHOD("get_sky"), &Environment::get_sky);
 	ClassDB::bind_method(D_METHOD("set_sky_custom_fov", "scale"), &Environment::set_sky_custom_fov);
@@ -1569,6 +1581,10 @@ void Environment::_bind_methods() {
 	BIND_ENUM_CONSTANT(BG_KEEP);
 	BIND_ENUM_CONSTANT(BG_CAMERA_FEED);
 	BIND_ENUM_CONSTANT(BG_MAX);
+
+	BIND_ENUM_CONSTANT(DEPTH_MODE_CLEAR);
+	BIND_ENUM_CONSTANT(DEPTH_MODE_KEEP);
+	BIND_ENUM_CONSTANT(DEPTH_MODE_MAX);
 
 	BIND_ENUM_CONSTANT(AMBIENT_SOURCE_BG);
 	BIND_ENUM_CONSTANT(AMBIENT_SOURCE_DISABLED);

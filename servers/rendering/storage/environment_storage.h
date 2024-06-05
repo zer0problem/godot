@@ -45,6 +45,8 @@ private:
 
 		// Background
 		RS::EnvironmentBG background = RS::ENV_BG_CLEAR_COLOR;
+		// HACK: TI - Clear or Keep depth for post-processing effects
+		RS::EnvironmentDepthMode depth_mode = RS::ENV_DEPTH_MODE_CLEAR;
 		RID sky;
 		float sky_custom_fov = 0.0;
 		Basis sky_orientation;
@@ -174,6 +176,7 @@ public:
 
 	// Background
 	void environment_set_background(RID p_env, RS::EnvironmentBG p_bg);
+	void environment_set_depth_mode(RID p_env, RS::EnvironmentDepthMode p_dm);
 	void environment_set_sky(RID p_env, RID p_sky);
 	void environment_set_sky_custom_fov(RID p_env, float p_scale);
 	void environment_set_sky_orientation(RID p_env, const Basis &p_orientation);
@@ -187,6 +190,7 @@ public:
 #endif
 
 	RS::EnvironmentBG environment_get_background(RID p_env) const;
+	RS::EnvironmentDepthMode environment_get_depth_mode(RID p_env) const;
 	RID environment_get_sky(RID p_env) const;
 	float environment_get_sky_custom_fov(RID p_env) const;
 	Basis environment_get_sky_orientation(RID p_env) const;

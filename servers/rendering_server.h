@@ -891,6 +891,8 @@ public:
 
 	// HACK: TI - Viewport attach additive viewports
 	virtual void viewport_attach_additive_camera(RID p_viewport, RID p_camera) = 0;
+	// HACK: TI - Force render camera
+	virtual void viewport_camera_force_render(RID p_viewport, RID p_camera) = 0;
 
 	virtual void viewport_set_use_xr(RID p_viewport, bool p_use_xr) = 0;
 	virtual void viewport_set_size(RID p_viewport, int p_width, int p_height) = 0;
@@ -1143,6 +1145,13 @@ public:
 		ENV_BG_MAX
 	};
 
+	// HACK: TI - Keep depth
+	enum EnvironmentDepthMode {
+		ENV_DEPTH_MODE_CLEAR,
+		ENV_DEPTH_MODE_KEEP,
+		ENV_DEPTH_MODE_MAX,
+	};
+
 	enum EnvironmentAmbientSource {
 		ENV_AMBIENT_SOURCE_BG,
 		ENV_AMBIENT_SOURCE_DISABLED,
@@ -1157,6 +1166,7 @@ public:
 	};
 
 	virtual void environment_set_background(RID p_env, EnvironmentBG p_bg) = 0;
+	virtual void environment_set_depth_mode(RID p_env, EnvironmentDepthMode p_dm) = 0;
 	virtual void environment_set_sky(RID p_env, RID p_sky) = 0;
 	virtual void environment_set_sky_custom_fov(RID p_env, float p_scale) = 0;
 	virtual void environment_set_sky_orientation(RID p_env, const Basis &p_orientation) = 0;
@@ -1844,6 +1854,7 @@ VARIANT_ENUM_CAST(RenderingServer::SkyMode);
 VARIANT_ENUM_CAST(RenderingServer::CompositorEffectCallbackType);
 VARIANT_ENUM_CAST(RenderingServer::CompositorEffectFlags);
 VARIANT_ENUM_CAST(RenderingServer::EnvironmentBG);
+VARIANT_ENUM_CAST(RenderingServer::EnvironmentDepthMode);
 VARIANT_ENUM_CAST(RenderingServer::EnvironmentAmbientSource);
 VARIANT_ENUM_CAST(RenderingServer::EnvironmentReflectionSource);
 VARIANT_ENUM_CAST(RenderingServer::EnvironmentGlowBlendMode);

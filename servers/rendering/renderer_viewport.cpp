@@ -251,11 +251,8 @@ void RendererViewport::_draw_3d(Viewport *p_viewport) {
 			continue;
 		}
 
-		bool use_scissor = RS::get_singleton()->camera_get_use_scissor(camera);
-		Rect2i scissor_rect = RS::get_singleton()->camera_get_scissor_rect(camera);
-		p_viewport->render_buffers.ptr()->set_use_scissor(use_scissor);
-		p_viewport->render_buffers.ptr()->set_scissor_rect(scissor_rect);
 		RSG::scene->render_camera(p_viewport->render_buffers, camera, p_viewport->scenario, p_viewport->self, p_viewport->internal_size, p_viewport->jitter_phase_count, screen_mesh_lod_threshold, p_viewport->shadow_atlas, xr_interface, &p_viewport->render_info);
+		break;
 	}
 
 	RENDER_TIMESTAMP("< Render 3D Scene");
@@ -893,6 +890,18 @@ void RendererViewport::viewport_initialize(RID p_rid) {
 	viewport->viewport_render_direct_to_screen = false;
 
 	viewport->fsr_enabled = !RSG::rasterizer->is_low_end() && !viewport->disable_3d;
+}
+
+void RendererViewport::viewport_camera_force_render(RID p_viewport, RID p_camera) {
+	Viewport *viewport = viewport_owner.get_or_null(p_viewport);
+
+	Ref<XRInterface> xr_interface;
+	if (viewport->use_xr && XRServer::get_singleton() != nullptr) {
+		xr_interface = XRServer::get_singleton()->get_primary_interface();
+	}
+
+	float screen_mesh_lod_threshold = viewport->mesh_lod_threshold / float(viewport->size.width);
+	RSG::scene->render_camera(viewport->render_buffers, p_camera, viewport->scenario, viewport->self, viewport->internal_size, viewport->jitter_phase_count, screen_mesh_lod_threshold, viewport->shadow_atlas, xr_interface, &viewport->render_info);
 }
 
 void RendererViewport::viewport_set_use_xr(RID p_viewport, bool p_use_xr) {

@@ -610,6 +610,7 @@ public:
 
 	FUNCRIDSPLIT(viewport)
 
+
 	FUNC2(viewport_set_use_xr, RID, bool)
 	FUNC3(viewport_set_size, RID, int, int)
 
@@ -621,6 +622,9 @@ public:
 	FUNC3(viewport_attach_to_screen, RID, const Rect2 &, int)
 	// HACK: TI - Multiple cameras per viewport
 	FUNC2(viewport_attach_additive_camera, RID, RID)
+	// HACK: TI - Force render camera
+	FUNC2(viewport_camera_force_render, RID, RID)
+
 	FUNC2(viewport_set_render_direct_to_screen, RID, bool)
 
 	FUNC2(viewport_set_scaling_3d_mode, RID, ViewportScaling3DMode)
@@ -719,6 +723,7 @@ public:
 	FUNCRIDSPLIT(environment)
 
 	FUNC2(environment_set_background, RID, EnvironmentBG)
+	FUNC2(environment_set_depth_mode, RID, EnvironmentDepthMode)
 	FUNC2(environment_set_sky, RID, RID)
 	FUNC2(environment_set_sky_custom_fov, RID, float)
 	FUNC2(environment_set_sky_orientation, RID, const Basis &)

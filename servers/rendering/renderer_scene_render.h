@@ -106,6 +106,7 @@ public:
 
 	// Background
 	void environment_set_background(RID p_env, RS::EnvironmentBG p_bg);
+	void environment_set_depth_mode(RID p_env, RS::EnvironmentDepthMode p_dm);
 	void environment_set_sky(RID p_env, RID p_sky);
 	void environment_set_sky_custom_fov(RID p_env, float p_scale);
 	void environment_set_sky_orientation(RID p_env, const Basis &p_orientation);
@@ -119,6 +120,7 @@ public:
 #endif
 
 	RS::EnvironmentBG environment_get_background(RID p_env) const;
+	RS::EnvironmentDepthMode environment_get_depth_mode(RID p_env) const;
 	RID environment_get_sky(RID p_env) const;
 	float environment_get_sky_custom_fov(RID p_env) const;
 	Basis environment_get_sky_orientation(RID p_env) const;
@@ -299,6 +301,10 @@ public:
 		bool is_orthogonal;
 		uint32_t visible_layers;
 		bool vaspect;
+
+		// HACK: TI - Use scissor
+		bool use_scissor;
+		Rect2i scissor_rect;
 
 		// Main/center projection
 		Transform3D main_transform;

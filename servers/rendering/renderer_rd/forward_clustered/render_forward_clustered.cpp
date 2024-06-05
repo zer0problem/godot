@@ -40,6 +40,7 @@
 #include "servers/rendering/renderer_rd/uniform_set_cache_rd.h"
 #include "servers/rendering/rendering_device.h"
 #include "servers/rendering/rendering_server_default.h"
+#include <string>
 
 using namespace RendererSceneRenderImplementation;
 
@@ -1619,11 +1620,11 @@ void RenderForwardClustered::_process_sss(Ref<RenderSceneBuffersRD> p_render_buf
 
 void RenderForwardClustered::_render_scene(RenderDataRD *p_render_data, const Color &p_default_bg_color) {
 	RendererRD::LightStorage *light_storage = RendererRD::LightStorage::get_singleton();
-
 	ERR_FAIL_NULL(p_render_data);
 
 	Ref<RenderSceneBuffersRD> rb = p_render_data->render_buffers;
 	ERR_FAIL_COND(rb.is_null());
+
 	Ref<RenderBufferDataForwardClustered> rb_data;
 	if (rb->has_custom_data(RB_SCOPE_FORWARD_CLUSTERED)) {
 		// Our forward clustered custom data buffer will only be available when we're rendering our normal view.
@@ -1633,8 +1634,8 @@ void RenderForwardClustered::_render_scene(RenderDataRD *p_render_data, const Co
 	// HACK: TI - fetch scissor
 	// not sure if it's supposed to be get_target_size or get_internal_size
 	Rect2i scissor_rect = Rect2i(Point2i(0, 0), rb->get_internal_size());
-	if (rb->get_use_scissor()) {
-		scissor_rect = rb->get_scissor_rect();
+	if (p_render_data->scene_data->use_scissor) {
+		scissor_rect = p_render_data->scene_data->scissor_rect;
 	}
 
 	bool is_reflection_probe = p_render_data->reflection_probe.is_valid();
@@ -1865,17 +1866,24 @@ void RenderForwardClustered::_render_scene(RenderDataRD *p_render_data, const Co
 
 	Color clear_color;
 	bool load_color = false;
+	bool load_depth = false;
 
 	if (get_debug_draw_mode() == RS::VIEWPORT_DEBUG_DRAW_OVERDRAW) {
 		clear_color = Color(0, 0, 0, 1); //in overdraw mode, BG should always be black
 	} else if (is_environment(p_render_data->environment)) {
 		RS::EnvironmentBG bg_mode = environment_get_background(p_render_data->environment);
+		RS::EnvironmentDepthMode depth_mode = environment_get_depth_mode(p_render_data->environment);
+
 		float bg_energy_multiplier = environment_get_bg_energy_multiplier(p_render_data->environment);
 		bg_energy_multiplier *= environment_get_bg_intensity(p_render_data->environment);
 		RS::EnvironmentReflectionSource reflection_source = environment_get_reflection_source(p_render_data->environment);
 
 		if (p_render_data->camera_attributes.is_valid()) {
 			bg_energy_multiplier *= RSG::camera_attributes->camera_attributes_get_exposure_normalization_factor(p_render_data->camera_attributes);
+		}
+
+		if (depth_mode == RS::ENV_DEPTH_MODE_KEEP) {
+			load_depth = true;
 		}
 
 		switch (bg_mode) {
@@ -1998,14 +2006,16 @@ void RenderForwardClustered::_render_scene(RenderDataRD *p_render_data, const Co
 			_post_prepass_render(p_render_data, using_sdfgi || using_voxelgi);
 		}
 
-		RD::get_singleton()->draw_command_begin_label("Render Depth Pre-Pass");
+		std::string rdp_str = "Render Depth Pre-Pass TOMMI " + std::to_string((uint64_t)p_render_data);
+		RD::get_singleton()->draw_command_begin_label(rdp_str.c_str());//"Render Depth Pre-Pass");
 
 		RID rp_uniform_set = _setup_render_pass_uniform_set(RENDER_LIST_OPAQUE, nullptr, RID(), samplers);
 
 		bool finish_depth = using_ssao || using_ssil || using_sdfgi || using_voxelgi || ce_pre_opaque_resolved_depth || ce_post_opaque_resolved_depth;
 		RenderListParameters render_list_params(render_list[RENDER_LIST_OPAQUE].elements.ptr(), render_list[RENDER_LIST_OPAQUE].element_info.ptr(), render_list[RENDER_LIST_OPAQUE].elements.size(), reverse_cull, depth_pass_mode, 0, rb_data.is_null(), p_render_data->directional_light_soft_shadows, rp_uniform_set, get_debug_draw_mode() == RS::VIEWPORT_DEBUG_DRAW_WIREFRAME, Vector2(), p_render_data->scene_data->lod_distance_multiplier, p_render_data->scene_data->screen_mesh_lod_threshold, p_render_data->scene_data->view_count, 0, spec_constant_base_flags);
 		// HACK: TI - Switched from INITIAL_ACTION_CLEAR to INITIAL_ACTION_KEEP to allow SS effects
-		_render_list_with_draw_list(&render_list_params, depth_framebuffer, needs_pre_resolve ? RD::INITIAL_ACTION_LOAD : RD::INITIAL_ACTION_KEEP, RD::FINAL_ACTION_STORE, needs_pre_resolve ? RD::INITIAL_ACTION_LOAD : RD::INITIAL_ACTION_CLEAR, RD::FINAL_ACTION_STORE, needs_pre_resolve ? Vector<Color>() : depth_pass_clear, 0, 0, Rect2(), scissor_rect);
+		// HACK: TI - Added load_depth to allow more SS effects
+		_render_list_with_draw_list(&render_list_params, depth_framebuffer, needs_pre_resolve ? RD::INITIAL_ACTION_LOAD : RD::INITIAL_ACTION_KEEP, RD::FINAL_ACTION_STORE, (needs_pre_resolve || load_depth) ? RD::INITIAL_ACTION_LOAD : RD::INITIAL_ACTION_CLEAR, RD::FINAL_ACTION_STORE, needs_pre_resolve ? Vector<Color>() : depth_pass_clear, 0, 0, Rect2(), scissor_rect);
 
 		RD::get_singleton()->draw_command_end_label();
 
@@ -2037,7 +2047,57 @@ void RenderForwardClustered::_render_scene(RenderDataRD *p_render_data, const Co
 		}
 
 		RENDER_TIMESTAMP("Process Pre Opaque Compositor Effects");
+		// HACK: TI - Backup render list to apply it again if needed
+		RenderList backups[4];
+		for (int i = 0; i < 4; ++i) {
+			backups[i] = render_list[i];
+		}
 		_process_compositor_effects(RS::COMPOSITOR_EFFECT_CALLBACK_TYPE_PRE_OPAQUE, p_render_data);
+		bool has_changed = false;
+		for (int i = 0; i < 4; ++i) {
+			if (render_list[i].elements.size() != backups[i].elements.size()) {
+				has_changed = true;
+			}
+			if (render_list[i].element_info.size() != backups[i].element_info.size()) {
+				has_changed = true;
+			}
+			if (!has_changed) {
+				for (int j = 0; j < render_list[i].elements.size(); ++j) {
+					if (render_list[i].elements[j] != backups[i].elements[j]) {
+						has_changed = true;
+						break;
+					}
+				}
+			}
+			if (!has_changed) {
+				for (int j = 0; j < render_list[i].element_info.size(); ++j) {
+					if (memcmp(&render_list[i].element_info[j], &backups[i].element_info[j], sizeof(RenderElementInfo)) != 0) {
+						has_changed = true;
+						break;
+					}
+				}
+			}
+			render_list[i] = backups[i];
+		}
+
+		if (has_changed) {
+			// HACK: TI - this is the point we're going to inject new cameras
+			RD::get_singleton()->draw_command_begin_label("Render Re-Setup Portals");
+
+			_setup_lightmaps(p_render_data, *p_render_data->lightmaps, p_render_data->scene_data->cam_transform);
+			_setup_voxelgis(*p_render_data->voxel_gi_instances);
+			_setup_environment(p_render_data, is_reflection_probe, screen_size, !is_reflection_probe, p_default_bg_color, false);
+
+			// May have changed due to the above (light buffer enlarged, as an example).
+			_update_render_base_uniform_set();
+
+			render_info = p_render_data->render_info ? p_render_data->render_info->info[RS::VIEWPORT_RENDER_INFO_TYPE_VISIBLE] : (int *)nullptr;
+			_fill_instance_data(RENDER_LIST_OPAQUE, render_info);
+			_fill_instance_data(RENDER_LIST_MOTION, render_info);
+			_fill_instance_data(RENDER_LIST_ALPHA);
+
+			RD::get_singleton()->draw_command_end_label();
+		}
 	}
 
 	RID normal_roughness_views[RendererSceneRender::MAX_RENDER_VIEWS];
@@ -2050,7 +2110,8 @@ void RenderForwardClustered::_render_scene(RenderDataRD *p_render_data, const Co
 
 	RENDER_TIMESTAMP("Render Opaque Pass");
 
-	RD::get_singleton()->draw_command_begin_label("Render Opaque Pass");
+	std::string rop_str = "Render Opaque Pass TOMMI " + std::to_string((uint64_t)p_render_data);
+	RD::get_singleton()->draw_command_begin_label(rop_str.c_str());//"Render Opaque Pass");
 
 	p_render_data->scene_data->directional_light_count = p_render_data->directional_light_count;
 	p_render_data->scene_data->opaque_prepass_threshold = 0.0f;
@@ -2084,7 +2145,7 @@ void RenderForwardClustered::_render_scene(RenderDataRD *p_render_data, const Co
 			uint32_t opaque_color_pass_flags = using_motion_pass ? (color_pass_flags & ~COLOR_PASS_FLAG_MOTION_VECTORS) : color_pass_flags;
 			RID opaque_framebuffer = using_motion_pass ? rb_data->get_color_pass_fb(opaque_color_pass_flags) : color_framebuffer;
 			RenderListParameters render_list_params(render_list[RENDER_LIST_OPAQUE].elements.ptr(), render_list[RENDER_LIST_OPAQUE].element_info.ptr(), render_list[RENDER_LIST_OPAQUE].elements.size(), reverse_cull, PASS_MODE_COLOR, opaque_color_pass_flags, rb_data.is_null(), p_render_data->directional_light_soft_shadows, rp_uniform_set, get_debug_draw_mode() == RS::VIEWPORT_DEBUG_DRAW_WIREFRAME, Vector2(), p_render_data->scene_data->lod_distance_multiplier, p_render_data->scene_data->screen_mesh_lod_threshold, p_render_data->scene_data->view_count, 0, spec_constant_base_flags);
-			_render_list_with_draw_list(&render_list_params, opaque_framebuffer, load_color ? RD::INITIAL_ACTION_LOAD : RD::INITIAL_ACTION_CLEAR, RD::FINAL_ACTION_STORE, depth_pre_pass ? RD::INITIAL_ACTION_LOAD : RD::INITIAL_ACTION_CLEAR, RD::FINAL_ACTION_STORE, c, 0.0, 0, Rect2(), scissor_rect);
+			_render_list_with_draw_list(&render_list_params, opaque_framebuffer, load_color ? RD::INITIAL_ACTION_LOAD : RD::INITIAL_ACTION_CLEAR, RD::FINAL_ACTION_STORE, (depth_pre_pass || load_depth) ? RD::INITIAL_ACTION_LOAD : RD::INITIAL_ACTION_CLEAR, RD::FINAL_ACTION_STORE, c, 0.0, 0, Rect2(), scissor_rect);
 		}
 
 		RD::get_singleton()->draw_command_end_label();

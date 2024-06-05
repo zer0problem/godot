@@ -268,6 +268,10 @@ void RendererSceneRender::environment_set_background(RID p_env, RS::EnvironmentB
 	environment_storage.environment_set_background(p_env, p_bg);
 }
 
+void RendererSceneRender::environment_set_depth_mode(RID p_env, RS::EnvironmentDepthMode p_dm) {
+	environment_storage.environment_set_depth_mode(p_env, p_dm);
+}
+
 void RendererSceneRender::environment_set_sky(RID p_env, RID p_sky) {
 	environment_storage.environment_set_sky(p_env, p_sky);
 }
@@ -298,6 +302,10 @@ void RendererSceneRender::environment_set_ambient_light(RID p_env, const Color &
 
 RS::EnvironmentBG RendererSceneRender::environment_get_background(RID p_env) const {
 	return environment_storage.environment_get_background(p_env);
+}
+
+RS::EnvironmentDepthMode RendererSceneRender::environment_get_depth_mode(RID p_env) const {
+	return environment_storage.environment_get_depth_mode(p_env);
 }
 
 RID RendererSceneRender::environment_get_sky(RID p_env) const {
