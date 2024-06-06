@@ -1645,6 +1645,9 @@ void RenderForwardClustered::_render_scene(RenderDataRD *p_render_data, const Co
 	//first of all, make a new render pass
 	//fill up ubo
 
+	// HACK: TI - pre depth CE
+	_process_compositor_effects(RS::COMPOSITOR_EFFECT_CALLBACK_TYPE_PRE_DEPTH, p_render_data);
+
 	RENDER_TIMESTAMP("Prepare 3D Scene");
 
 	// get info about our rendering effects
@@ -2053,51 +2056,26 @@ void RenderForwardClustered::_render_scene(RenderDataRD *p_render_data, const Co
 			backups[i] = render_list[i];
 		}
 		_process_compositor_effects(RS::COMPOSITOR_EFFECT_CALLBACK_TYPE_PRE_OPAQUE, p_render_data);
-		bool has_changed = false;
 		for (int i = 0; i < 4; ++i) {
-			if (render_list[i].elements.size() != backups[i].elements.size()) {
-				has_changed = true;
-			}
-			if (render_list[i].element_info.size() != backups[i].element_info.size()) {
-				has_changed = true;
-			}
-			if (!has_changed) {
-				for (int j = 0; j < render_list[i].elements.size(); ++j) {
-					if (render_list[i].elements[j] != backups[i].elements[j]) {
-						has_changed = true;
-						break;
-					}
-				}
-			}
-			if (!has_changed) {
-				for (int j = 0; j < render_list[i].element_info.size(); ++j) {
-					if (memcmp(&render_list[i].element_info[j], &backups[i].element_info[j], sizeof(RenderElementInfo)) != 0) {
-						has_changed = true;
-						break;
-					}
-				}
-			}
 			render_list[i] = backups[i];
 		}
 
-		if (has_changed) {
-			// HACK: TI - this is the point we're going to inject new cameras
-			RD::get_singleton()->draw_command_begin_label("Render Re-Setup Portals");
+		// HACK: TI - this is the point we're going to inject new cameras
+		RD::get_singleton()->draw_command_begin_label("Render Re-Setup Portals");
 
-			_setup_lightmaps(p_render_data, *p_render_data->lightmaps, p_render_data->scene_data->cam_transform);
-			_setup_voxelgis(*p_render_data->voxel_gi_instances);
-			_setup_environment(p_render_data, is_reflection_probe, screen_size, !is_reflection_probe, p_default_bg_color, false);
+		_setup_lightmaps(p_render_data, *p_render_data->lightmaps, p_render_data->scene_data->cam_transform);
+		_setup_voxelgis(*p_render_data->voxel_gi_instances);
+		_setup_environment(p_render_data, is_reflection_probe, screen_size, !is_reflection_probe, p_default_bg_color, false);
 
-			// May have changed due to the above (light buffer enlarged, as an example).
-			_update_render_base_uniform_set();
+		// May have changed due to the above (light buffer enlarged, as an example).
+		_update_render_base_uniform_set();
 
-			render_info = p_render_data->render_info ? p_render_data->render_info->info[RS::VIEWPORT_RENDER_INFO_TYPE_VISIBLE] : (int *)nullptr;
-			_fill_instance_data(RENDER_LIST_OPAQUE, render_info);
-			_fill_instance_data(RENDER_LIST_MOTION, render_info);
-			_fill_instance_data(RENDER_LIST_ALPHA);
+		render_info = p_render_data->render_info ? p_render_data->render_info->info[RS::VIEWPORT_RENDER_INFO_TYPE_VISIBLE] : (int *)nullptr;
+		_fill_instance_data(RENDER_LIST_OPAQUE, render_info);
+		_fill_instance_data(RENDER_LIST_MOTION, render_info);
+		_fill_instance_data(RENDER_LIST_ALPHA);
 
-			RD::get_singleton()->draw_command_end_label();
-		}
+		RD::get_singleton()->draw_command_end_label();
 	}
 
 	RID normal_roughness_views[RendererSceneRender::MAX_RENDER_VIEWS];
