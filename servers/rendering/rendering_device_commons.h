@@ -323,6 +323,13 @@ public:
 		TEXTURE_USAGE_VRS_ATTACHMENT_BIT = (1 << 10),
 	};
 
+	enum TextureAspectBits {
+		TEXTURE_ASPECT_COLOR_BIT = (1 << 0),
+		TEXTURE_ASPECT_DEPTH_BIT = (1 << 1),
+		TEXTURE_ASPECT_STENCIL_BIT = (1 << 2),
+		TEXTURE_ASPECT_METADATA_BIT = (1 << 3),
+	};
+
 	struct TextureFormat {
 		DataFormat format = DATA_FORMAT_R8_UNORM;
 		uint32_t width = 1;
@@ -333,6 +340,7 @@ public:
 		TextureType texture_type = TEXTURE_TYPE_2D;
 		TextureSamples samples = TEXTURE_SAMPLES_1;
 		uint32_t usage_bits = 0;
+		uint32_t aspect_bits = 0;
 		Vector<DataFormat> shareable_formats;
 		bool is_resolve_buffer = false;
 
@@ -381,7 +389,7 @@ public:
 		TEXTURE_SLICE_2D_ARRAY,
 		TEXTURE_SLICE_MAX
 	};
-
+	
 	/*****************/
 	/**** SAMPLER ****/
 	/*****************/
@@ -550,6 +558,13 @@ public:
 	enum PolygonFrontFace {
 		POLYGON_FRONT_FACE_CLOCKWISE,
 		POLYGON_FRONT_FACE_COUNTER_CLOCKWISE,
+	};
+
+	// HACK: TI - Stencil, I don't know where to place this really
+	enum StencilFaceFlagBits {
+		STENCIL_FACE_FRONT_BIT = 0x1,
+		STENCIL_FACE_BACK_BIT = 0x2,
+		STENCIL_FACE_FRONT_AND_BACK = 0x3,
 	};
 
 	enum StencilOperation {

@@ -69,6 +69,7 @@ public:
 	RD_SETGET(RD::TextureType, texture_type)
 	RD_SETGET(RD::TextureSamples, samples)
 	RD_SETGET(BitField<RenderingDevice::TextureUsageBits>, usage_bits)
+	RD_SETGET(BitField<RenderingDevice::TextureAspectBits>, aspect_bits)
 
 	void add_shareable_format(RD::DataFormat p_format) { base.shareable_formats.push_back(p_format); }
 	void remove_shareable_format(RD::DataFormat p_format) { base.shareable_formats.erase(p_format); }
@@ -123,11 +124,13 @@ public:
 	RD_SETGET(RD::DataFormat, format)
 	RD_SETGET(RD::TextureSamples, samples)
 	RD_SETGET(uint32_t, usage_flags)
+	RD_SETGET(uint32_t, aspect_flags)
 protected:
 	static void _bind_methods() {
 		RD_BIND(Variant::INT, RDAttachmentFormat, format);
 		RD_BIND(Variant::INT, RDAttachmentFormat, samples);
 		RD_BIND(Variant::INT, RDAttachmentFormat, usage_flags);
+		RD_BIND(Variant::INT, RDAttachmentFormat, aspect_flags);
 	}
 };
 

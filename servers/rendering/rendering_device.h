@@ -341,10 +341,12 @@ public:
 		DataFormat format;
 		TextureSamples samples;
 		uint32_t usage_flags;
+		uint32_t aspect_flags;
 		AttachmentFormat() {
 			format = DATA_FORMAT_R8G8B8A8_UNORM;
 			samples = TEXTURE_SAMPLES_1;
 			usage_flags = 0;
+			aspect_flags = 0;
 		}
 	};
 
@@ -1121,6 +1123,10 @@ public:
 	void draw_list_enable_scissor(DrawListID p_list, const Rect2 &p_rect);
 	void draw_list_disable_scissor(DrawListID p_list);
 
+	void draw_list_set_stencil_compare_mask(DrawListID p_list, RenderingDeviceCommons::StencilFaceFlagBits p_face_flags, uint32_t p_compare_mask);
+	void draw_list_set_stencil_reference(DrawListID p_list, RenderingDeviceCommons::StencilFaceFlagBits p_face_flags, uint32_t p_reference);
+	void draw_list_set_stencil_write_mask(DrawListID p_list, RenderingDeviceCommons::StencilFaceFlagBits p_face_flags, uint32_t p_write_mask);
+
 	uint32_t draw_list_get_current_pass();
 	DrawListID draw_list_switch_to_next_pass();
 
@@ -1413,6 +1419,7 @@ VARIANT_ENUM_CAST(RenderingDevice::DataFormat)
 VARIANT_ENUM_CAST(RenderingDevice::TextureType)
 VARIANT_ENUM_CAST(RenderingDevice::TextureSamples)
 VARIANT_BITFIELD_CAST(RenderingDevice::TextureUsageBits)
+VARIANT_BITFIELD_CAST(RenderingDevice::TextureAspectBits)
 VARIANT_ENUM_CAST(RenderingDevice::TextureSwizzle)
 VARIANT_ENUM_CAST(RenderingDevice::TextureSliceType)
 VARIANT_ENUM_CAST(RenderingDevice::SamplerFilter)
@@ -1426,6 +1433,7 @@ VARIANT_ENUM_CAST(RenderingDevice::RenderPrimitive)
 VARIANT_ENUM_CAST(RenderingDevice::PolygonCullMode)
 VARIANT_ENUM_CAST(RenderingDevice::PolygonFrontFace)
 VARIANT_ENUM_CAST(RenderingDevice::StencilOperation)
+VARIANT_ENUM_CAST(RenderingDevice::StencilFaceFlagBits)
 VARIANT_ENUM_CAST(RenderingDevice::LogicOperation)
 VARIANT_ENUM_CAST(RenderingDevice::BlendFactor)
 VARIANT_ENUM_CAST(RenderingDevice::BlendOperation)

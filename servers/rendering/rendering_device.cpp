@@ -3908,6 +3908,39 @@ void RenderingDevice::draw_list_disable_scissor(DrawListID p_list) {
 	_draw_list_set_scissor(dl->viewport);
 }
 
+void RenderingDevice::draw_list_set_stencil_compare_mask(DrawListID p_list, RenderingDeviceCommons::StencilFaceFlagBits p_face_flags, uint32_t p_compare_mask) {
+	DrawList *dl = _get_draw_list_ptr(p_list);
+	ERR_FAIL_NULL(dl);
+#ifdef DEBUG_ENABLED
+	ERR_FAIL_COND_MSG(!dl->validation.active, "Submitted Draw Lists can no longer be modified.");
+#endif
+
+	// I'm sorry, I dont care to make a _ version of this function
+	draw_graph.add_draw_list_set_stencil_compare_mask(p_face_flags, p_compare_mask);
+}
+
+void RenderingDevice::draw_list_set_stencil_reference(DrawListID p_list, RenderingDeviceCommons::StencilFaceFlagBits p_face_flags, uint32_t p_reference) {
+	DrawList *dl = _get_draw_list_ptr(p_list);
+	ERR_FAIL_NULL(dl);
+#ifdef DEBUG_ENABLED
+	ERR_FAIL_COND_MSG(!dl->validation.active, "Submitted Draw Lists can no longer be modified.");
+#endif
+
+	// I'm sorry, I dont care to make a _ version of this function
+	draw_graph.add_draw_list_set_stencil_reference(p_face_flags, p_reference);
+}
+
+void RenderingDevice::draw_list_set_stencil_write_mask(DrawListID p_list, RenderingDeviceCommons::StencilFaceFlagBits p_face_flags, uint32_t p_write_mask) {
+	DrawList *dl = _get_draw_list_ptr(p_list);
+	ERR_FAIL_NULL(dl);
+#ifdef DEBUG_ENABLED
+	ERR_FAIL_COND_MSG(!dl->validation.active, "Submitted Draw Lists can no longer be modified.");
+#endif
+
+	// I'm sorry, I dont care to make a _ version of this function
+	draw_graph.add_draw_list_set_stencil_write_mask(p_face_flags, p_write_mask);
+}
+
 uint32_t RenderingDevice::draw_list_get_current_pass() {
 	return draw_list_current_subpass;
 }
@@ -5655,6 +5688,10 @@ void RenderingDevice::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("draw_list_enable_scissor", "draw_list", "rect"), &RenderingDevice::draw_list_enable_scissor, DEFVAL(Rect2()));
 	ClassDB::bind_method(D_METHOD("draw_list_disable_scissor", "draw_list"), &RenderingDevice::draw_list_disable_scissor);
 
+	ClassDB::bind_method(D_METHOD("draw_list_set_stencil_compare_mask", "draw_list", "face_flags", "compare_mask"), &RenderingDevice::draw_list_set_stencil_compare_mask);
+	ClassDB::bind_method(D_METHOD("draw_list_set_stencil_reference", "draw_list", "face_flags", "reference"), &RenderingDevice::draw_list_set_stencil_reference);
+	ClassDB::bind_method(D_METHOD("draw_list_set_stencil_write_mask", "draw_list", "face_flags", "write_mask"), &RenderingDevice::draw_list_set_stencil_write_mask);
+	
 	ClassDB::bind_method(D_METHOD("draw_list_switch_to_next_pass"), &RenderingDevice::draw_list_switch_to_next_pass);
 #ifndef DISABLE_DEPRECATED
 	ClassDB::bind_method(D_METHOD("draw_list_switch_to_next_pass_split", "splits"), &RenderingDevice::_draw_list_switch_to_next_pass_split);
@@ -6003,6 +6040,11 @@ void RenderingDevice::_bind_methods() {
 	BIND_BITFIELD_FLAG(TEXTURE_USAGE_CAN_COPY_TO_BIT);
 	BIND_BITFIELD_FLAG(TEXTURE_USAGE_INPUT_ATTACHMENT_BIT);
 
+	BIND_BITFIELD_FLAG(TEXTURE_ASPECT_COLOR_BIT)
+	BIND_BITFIELD_FLAG(TEXTURE_ASPECT_DEPTH_BIT)
+	BIND_BITFIELD_FLAG(TEXTURE_ASPECT_STENCIL_BIT)
+	BIND_BITFIELD_FLAG(TEXTURE_ASPECT_METADATA_BIT)
+
 	BIND_ENUM_CONSTANT(TEXTURE_SWIZZLE_IDENTITY);
 	BIND_ENUM_CONSTANT(TEXTURE_SWIZZLE_ZERO);
 	BIND_ENUM_CONSTANT(TEXTURE_SWIZZLE_ONE);
@@ -6082,6 +6124,10 @@ void RenderingDevice::_bind_methods() {
 	BIND_ENUM_CONSTANT(STENCIL_OP_INCREMENT_AND_WRAP);
 	BIND_ENUM_CONSTANT(STENCIL_OP_DECREMENT_AND_WRAP);
 	BIND_ENUM_CONSTANT(STENCIL_OP_MAX); //not an actual operator); just the amount of operators :D
+
+	BIND_ENUM_CONSTANT(STENCIL_FACE_FRONT_BIT);
+	BIND_ENUM_CONSTANT(STENCIL_FACE_BACK_BIT);
+	BIND_ENUM_CONSTANT(STENCIL_FACE_FRONT_AND_BACK);
 
 	BIND_ENUM_CONSTANT(COMPARE_OP_NEVER);
 	BIND_ENUM_CONSTANT(COMPARE_OP_LESS);

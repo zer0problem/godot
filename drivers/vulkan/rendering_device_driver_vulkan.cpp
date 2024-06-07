@@ -4140,6 +4140,18 @@ void RenderingDeviceDriverVulkan::command_render_clear_attachments(CommandBuffer
 	vkCmdClearAttachments((VkCommandBuffer)p_cmd_buffer.id, p_attachment_clears.size(), vk_clears, p_rects.size(), vk_rects);
 }
 
+void RenderingDeviceDriverVulkan::command_render_set_stencil_compare_mask(CommandBufferID p_cmd_buffer, StencilFaceFlagBits p_face_flags, uint32_t p_compare_mask) {
+	vkCmdSetStencilCompareMask((VkCommandBuffer)p_cmd_buffer.id, (VkStencilFaceFlagBits)p_face_flags, p_compare_mask);
+}
+
+void RenderingDeviceDriverVulkan::command_render_set_stencil_reference(CommandBufferID p_cmd_buffer, StencilFaceFlagBits p_face_flags, uint32_t p_reference) {
+	vkCmdSetStencilReference((VkCommandBuffer)p_cmd_buffer.id, (VkStencilFaceFlagBits)p_face_flags, p_reference);
+}
+
+void RenderingDeviceDriverVulkan::command_render_set_stencil_write_mask(CommandBufferID p_cmd_buffer, StencilFaceFlagBits p_face_flags, uint32_t p_write_mask) {
+	vkCmdSetStencilWriteMask((VkCommandBuffer)p_cmd_buffer.id, (VkStencilFaceFlagBits)p_face_flags, p_write_mask);
+}
+
 void RenderingDeviceDriverVulkan::command_bind_render_pipeline(CommandBufferID p_cmd_buffer, PipelineID p_pipeline) {
 	vkCmdBindPipeline((VkCommandBuffer)p_cmd_buffer.id, VK_PIPELINE_BIND_POINT_GRAPHICS, (VkPipeline)p_pipeline.id);
 }

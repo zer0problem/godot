@@ -725,6 +725,21 @@ void RenderingDeviceGraph::_run_draw_list_command(RDD::CommandBufferID p_command
 				driver->command_render_set_viewport(p_command_buffer, set_viewport_instruction->rect);
 				instruction_data_cursor += sizeof(DrawListSetViewportInstruction);
 			} break;
+			case DrawListInstruction::TYPE_SET_STENCIL_COMPARE_MASK: {
+				const DrawListSetStencilCompareMaskInstruction *set_stencil_compare_mask_instruction = reinterpret_cast<const DrawListSetStencilCompareMaskInstruction *>(instruction);
+				driver->command_render_set_stencil_compare_mask(p_command_buffer, set_stencil_compare_mask_instruction->face_flags, set_stencil_compare_mask_instruction->compare_mask);
+				instruction_data_cursor += sizeof(DrawListSetStencilCompareMaskInstruction);
+			} break;
+			case DrawListInstruction::TYPE_SET_STENCIL_REFERENCE: {
+				const DrawListSetStencilReferenceInstruction *set_stencil_reference_instruction = reinterpret_cast<const DrawListSetStencilReferenceInstruction *>(instruction);
+				driver->command_render_set_stencil_reference(p_command_buffer, set_stencil_reference_instruction->face_flags, set_stencil_reference_instruction->reference);
+				instruction_data_cursor += sizeof(DrawListSetStencilReferenceInstruction);
+			} break;
+			case DrawListInstruction::TYPE_SET_STENCIL_WRITE_MASK: {
+				const DrawListSetStencilWriteMaskInstruction *set_stencil_write_mask_instruction = reinterpret_cast<const DrawListSetStencilWriteMaskInstruction *>(instruction);
+				driver->command_render_set_stencil_write_mask(p_command_buffer, set_stencil_write_mask_instruction->face_flags, set_stencil_write_mask_instruction->write_mask);
+				instruction_data_cursor += sizeof(DrawListSetStencilWriteMaskInstruction);
+			} break;
 			case DrawListInstruction::TYPE_UNIFORM_SET_PREPARE_FOR_USE: {
 				const DrawListUniformSetPrepareForUseInstruction *uniform_set_prepare_for_use_instruction = reinterpret_cast<const DrawListUniformSetPrepareForUseInstruction *>(instruction);
 				driver->command_uniform_set_prepare_for_use(p_command_buffer, uniform_set_prepare_for_use_instruction->uniform_set, uniform_set_prepare_for_use_instruction->shader, uniform_set_prepare_for_use_instruction->set_index);
@@ -1621,6 +1636,27 @@ void RenderingDeviceGraph::add_draw_list_set_viewport(Rect2i p_rect) {
 	DrawListSetViewportInstruction *instruction = reinterpret_cast<DrawListSetViewportInstruction *>(_allocate_draw_list_instruction(sizeof(DrawListSetViewportInstruction)));
 	instruction->type = DrawListInstruction::TYPE_SET_VIEWPORT;
 	instruction->rect = p_rect;
+}
+
+void RenderingDeviceGraph::add_draw_list_set_stencil_compare_mask(RenderingDeviceCommons::StencilFaceFlagBits p_face_flags, uint32_t p_compare_mask) {
+	DrawListSetStencilCompareMaskInstruction *instruction = reinterpret_cast<DrawListSetStencilCompareMaskInstruction *>(_allocate_draw_list_instruction(sizeof(DrawListSetStencilCompareMaskInstruction)));
+	instruction->type = DrawListInstruction::TYPE_SET_STENCIL_COMPARE_MASK;
+	instruction->face_flags = p_face_flags;
+	instruction->compare_mask = p_compare_mask;
+}
+
+void RenderingDeviceGraph::add_draw_list_set_stencil_reference(RenderingDeviceCommons::StencilFaceFlagBits p_face_flags, uint32_t p_reference) {
+	DrawListSetStencilReferenceInstruction *instruction = reinterpret_cast<DrawListSetStencilReferenceInstruction *>(_allocate_draw_list_instruction(sizeof(DrawListSetStencilReferenceInstruction)));
+	instruction->type = DrawListInstruction::TYPE_SET_STENCIL_REFERENCE;
+	instruction->face_flags = p_face_flags;
+	instruction->reference = p_reference;
+}
+
+void RenderingDeviceGraph::add_draw_list_set_stencil_write_mask(RenderingDeviceCommons::StencilFaceFlagBits p_face_flags, uint32_t p_write_mask) {
+	DrawListSetStencilWriteMaskInstruction *instruction = reinterpret_cast<DrawListSetStencilWriteMaskInstruction *>(_allocate_draw_list_instruction(sizeof(DrawListSetStencilWriteMaskInstruction)));
+	instruction->type = DrawListInstruction::TYPE_SET_STENCIL_WRITE_MASK;
+	instruction->face_flags = p_face_flags;
+	instruction->write_mask = p_write_mask;
 }
 
 void RenderingDeviceGraph::add_draw_list_uniform_set_prepare_for_use(RDD::ShaderID p_shader, RDD::UniformSetID p_uniform_set, uint32_t set_index) {

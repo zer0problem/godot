@@ -528,6 +528,11 @@ public:
 	virtual void command_render_set_scissor(CommandBufferID p_cmd_buffer, VectorView<Rect2i> p_scissors) override final;
 	virtual void command_render_clear_attachments(CommandBufferID p_cmd_buffer, VectorView<AttachmentClear> p_attachment_clears, VectorView<Rect2i> p_rects) override final;
 
+	// Stencil
+	virtual void command_render_set_stencil_compare_mask(CommandBufferID p_cmd_buffer, StencilFaceFlagBits p_face_flags, uint32_t p_compare_mask) override final;
+	virtual void command_render_set_stencil_reference(CommandBufferID p_cmd_buffer, StencilFaceFlagBits p_face_flags, uint32_t p_reference) override final;
+	virtual void command_render_set_stencil_write_mask(CommandBufferID p_cmd_buffer, StencilFaceFlagBits p_face_flags, uint32_t p_write_mask) override final;
+
 	// Binding.
 	virtual void command_bind_render_pipeline(CommandBufferID p_cmd_buffer, PipelineID p_pipeline) override final;
 	virtual void command_bind_render_uniform_set(CommandBufferID p_cmd_buffer, UniformSetID p_uniform_set, ShaderID p_shader, uint32_t p_set_index) override final;

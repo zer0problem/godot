@@ -76,6 +76,9 @@ public:
 			TYPE_SET_PUSH_CONSTANT,
 			TYPE_SET_SCISSOR,
 			TYPE_SET_VIEWPORT,
+			TYPE_SET_STENCIL_COMPARE_MASK,
+			TYPE_SET_STENCIL_REFERENCE,
+			TYPE_SET_STENCIL_WRITE_MASK,
 			TYPE_UNIFORM_SET_PREPARE_FOR_USE
 		};
 
@@ -490,6 +493,21 @@ private:
 		Rect2i rect;
 	};
 
+	struct DrawListSetStencilCompareMaskInstruction : DrawListInstruction {
+		RenderingDeviceCommons::StencilFaceFlagBits face_flags;
+		uint32_t compare_mask;
+	};
+
+	struct DrawListSetStencilReferenceInstruction : DrawListInstruction {
+		RenderingDeviceCommons::StencilFaceFlagBits face_flags;
+		uint32_t reference;
+	};
+
+	struct DrawListSetStencilWriteMaskInstruction : DrawListInstruction {
+		RenderingDeviceCommons::StencilFaceFlagBits face_flags;
+		uint32_t write_mask;
+	};
+
 	struct DrawListUniformSetPrepareForUseInstruction : DrawListInstruction {
 		RDD::UniformSetID uniform_set;
 		RDD::ShaderID shader;
@@ -667,6 +685,9 @@ public:
 	void add_draw_list_set_push_constant(RDD::ShaderID p_shader, const void *p_data, uint32_t p_data_size);
 	void add_draw_list_set_scissor(Rect2i p_rect);
 	void add_draw_list_set_viewport(Rect2i p_rect);
+	void add_draw_list_set_stencil_compare_mask(RenderingDeviceCommons::StencilFaceFlagBits p_face_flags, uint32_t p_compare_mask);
+	void add_draw_list_set_stencil_reference(RenderingDeviceCommons::StencilFaceFlagBits p_face_flags, uint32_t p_reference);
+	void add_draw_list_set_stencil_write_mask(RenderingDeviceCommons::StencilFaceFlagBits p_face_flags, uint32_t p_write_mask);
 	void add_draw_list_uniform_set_prepare_for_use(RDD::ShaderID p_shader, RDD::UniformSetID p_uniform_set, uint32_t set_index);
 	void add_draw_list_usage(ResourceTracker *p_tracker, ResourceUsage p_usage);
 	void add_draw_list_usages(VectorView<ResourceTracker *> p_trackers, VectorView<ResourceUsage> p_usages);
