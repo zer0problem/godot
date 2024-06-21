@@ -35,6 +35,10 @@ void RenderData::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_render_scene_data"), &RenderData::get_render_scene_data);
 	ClassDB::bind_method(D_METHOD("get_environment"), &RenderData::get_environment);
 	ClassDB::bind_method(D_METHOD("get_camera_attributes"), &RenderData::get_camera_attributes);
+
+	// HACK: TI - Stencil reference
+	ClassDB::bind_method(D_METHOD("get_stencil_reference"), &RenderData::get_stencil_reference);
+	ClassDB::bind_method(D_METHOD("set_stencil_reference"), &RenderData::set_stencil_reference);
 }
 
 void RenderDataExtension::_bind_methods() {
@@ -66,4 +70,14 @@ RID RenderDataExtension::get_camera_attributes() const {
 	RID ret;
 	GDVIRTUAL_CALL(_get_camera_attributes, ret);
 	return ret;
+}
+
+int RenderDataExtension::get_stencil_reference() const {
+	int ret;
+	GDVIRTUAL_CALL(_get_stencil_reference, ret);
+	return ret;
+}
+
+void RenderDataExtension::set_stencil_reference(int p_stencil_reference) {
+	GDVIRTUAL_CALL(_set_stencil_reference, p_stencil_reference);
 }

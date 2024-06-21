@@ -579,11 +579,12 @@ void RenderForwardClustered::_render_list(RenderingDevice::DrawListID p_draw_lis
 	}
 }
 
-void RenderForwardClustered::_render_list_with_draw_list(RenderListParameters *p_params, RID p_framebuffer, RD::InitialAction p_initial_color_action, RD::FinalAction p_final_color_action, RD::InitialAction p_initial_depth_action, RD::FinalAction p_final_depth_action, const Vector<Color> &p_clear_color_values, float p_clear_depth, uint32_t p_clear_stencil, const Rect2 &p_region, const Rect2 &p_scissor_region) {
+void RenderForwardClustered::_render_list_with_draw_list(RenderListParameters *p_params, RID p_framebuffer, RD::InitialAction p_initial_color_action, RD::FinalAction p_final_color_action, RD::InitialAction p_initial_depth_action, RD::FinalAction p_final_depth_action, const Vector<Color> &p_clear_color_values, float p_clear_depth, uint32_t p_clear_stencil, const Rect2 &p_region, const Rect2 &p_scissor_region, int p_stencil_reference) {
 	RD::FramebufferFormatID fb_format = RD::get_singleton()->framebuffer_get_format(p_framebuffer);
 	p_params->framebuffer_format = fb_format;
 
 	RD::DrawListID draw_list = RD::get_singleton()->draw_list_begin(p_framebuffer, p_initial_color_action, p_final_color_action, p_initial_depth_action, p_final_depth_action, p_clear_color_values, p_clear_depth, p_clear_stencil, p_region, p_scissor_region);
+	RD::get_singleton()->draw_list_set_stencil_reference(draw_list, RD::STENCIL_FACE_FRONT_BIT, p_stencil_reference);
 	_render_list(draw_list, fb_format, p_params, 0, p_params->element_count);
 	RD::get_singleton()->draw_list_end();
 }
@@ -1647,6 +1648,7 @@ void RenderForwardClustered::_render_scene(RenderDataRD *p_render_data, const Co
 
 	// HACK: TI - pre depth CE
 	_process_compositor_effects(RS::COMPOSITOR_EFFECT_CALLBACK_TYPE_PRE_DEPTH, p_render_data);
+	int stencil_reference = p_render_data->get_stencil_reference();
 
 	RENDER_TIMESTAMP("Prepare 3D Scene");
 
@@ -2003,7 +2005,8 @@ void RenderForwardClustered::_render_scene(RenderDataRD *p_render_data, const Co
 		if (needs_pre_resolve) {
 			//pre clear the depth framebuffer, as AMD (and maybe others?) use compute for it, and barrier other compute shaders.
 			// HACK: TI - Switched from INITIAL_ACTION_CLEAR to INITIAL_ACTION_KEEP to allow SS effects
-			RD::get_singleton()->draw_list_begin(depth_framebuffer, RD::INITIAL_ACTION_KEEP, RD::FINAL_ACTION_STORE, RD::INITIAL_ACTION_KEEP, RD::FINAL_ACTION_STORE, depth_pass_clear, 0.0, 0, Rect2(), scissor_rect);
+			auto draw_list = RD::get_singleton()->draw_list_begin(depth_framebuffer, RD::INITIAL_ACTION_KEEP, RD::FINAL_ACTION_STORE, RD::INITIAL_ACTION_KEEP, RD::FINAL_ACTION_STORE, depth_pass_clear, 0.0, 0, Rect2(), scissor_rect);
+			RD::get_singleton()->draw_list_set_stencil_reference(draw_list, RD::STENCIL_FACE_FRONT_AND_BACK, stencil_reference);
 			RD::get_singleton()->draw_list_end();
 			//start compute processes here, so they run at the same time as depth pre-pass
 			_post_prepass_render(p_render_data, using_sdfgi || using_voxelgi);
@@ -2018,7 +2021,8 @@ void RenderForwardClustered::_render_scene(RenderDataRD *p_render_data, const Co
 		RenderListParameters render_list_params(render_list[RENDER_LIST_OPAQUE].elements.ptr(), render_list[RENDER_LIST_OPAQUE].element_info.ptr(), render_list[RENDER_LIST_OPAQUE].elements.size(), reverse_cull, depth_pass_mode, 0, rb_data.is_null(), p_render_data->directional_light_soft_shadows, rp_uniform_set, get_debug_draw_mode() == RS::VIEWPORT_DEBUG_DRAW_WIREFRAME, Vector2(), p_render_data->scene_data->lod_distance_multiplier, p_render_data->scene_data->screen_mesh_lod_threshold, p_render_data->scene_data->view_count, 0, spec_constant_base_flags);
 		// HACK: TI - Switched from INITIAL_ACTION_CLEAR to INITIAL_ACTION_KEEP to allow SS effects
 		// HACK: TI - Added load_depth to allow more SS effects
-		_render_list_with_draw_list(&render_list_params, depth_framebuffer, needs_pre_resolve ? RD::INITIAL_ACTION_LOAD : RD::INITIAL_ACTION_KEEP, RD::FINAL_ACTION_STORE, (needs_pre_resolve || load_depth) ? RD::INITIAL_ACTION_LOAD : RD::INITIAL_ACTION_CLEAR, RD::FINAL_ACTION_STORE, needs_pre_resolve ? Vector<Color>() : depth_pass_clear, 0, 0, Rect2(), scissor_rect);
+		// HACK: TI - Added stencil_reference
+		_render_list_with_draw_list(&render_list_params, depth_framebuffer, needs_pre_resolve ? RD::INITIAL_ACTION_LOAD : RD::INITIAL_ACTION_KEEP, RD::FINAL_ACTION_STORE, (needs_pre_resolve || load_depth) ? RD::INITIAL_ACTION_LOAD : RD::INITIAL_ACTION_CLEAR, RD::FINAL_ACTION_STORE, needs_pre_resolve ? Vector<Color>() : depth_pass_clear, 0, 0, Rect2(), scissor_rect, stencil_reference);
 
 		RD::get_singleton()->draw_command_end_label();
 
@@ -2056,6 +2060,7 @@ void RenderForwardClustered::_render_scene(RenderDataRD *p_render_data, const Co
 			backups[i] = render_list[i];
 		}
 		_process_compositor_effects(RS::COMPOSITOR_EFFECT_CALLBACK_TYPE_PRE_OPAQUE, p_render_data);
+		stencil_reference = p_render_data->get_stencil_reference();
 		for (int i = 0; i < 4; ++i) {
 			render_list[i] = backups[i];
 		}
@@ -2123,7 +2128,7 @@ void RenderForwardClustered::_render_scene(RenderDataRD *p_render_data, const Co
 			uint32_t opaque_color_pass_flags = using_motion_pass ? (color_pass_flags & ~COLOR_PASS_FLAG_MOTION_VECTORS) : color_pass_flags;
 			RID opaque_framebuffer = using_motion_pass ? rb_data->get_color_pass_fb(opaque_color_pass_flags) : color_framebuffer;
 			RenderListParameters render_list_params(render_list[RENDER_LIST_OPAQUE].elements.ptr(), render_list[RENDER_LIST_OPAQUE].element_info.ptr(), render_list[RENDER_LIST_OPAQUE].elements.size(), reverse_cull, PASS_MODE_COLOR, opaque_color_pass_flags, rb_data.is_null(), p_render_data->directional_light_soft_shadows, rp_uniform_set, get_debug_draw_mode() == RS::VIEWPORT_DEBUG_DRAW_WIREFRAME, Vector2(), p_render_data->scene_data->lod_distance_multiplier, p_render_data->scene_data->screen_mesh_lod_threshold, p_render_data->scene_data->view_count, 0, spec_constant_base_flags);
-			_render_list_with_draw_list(&render_list_params, opaque_framebuffer, load_color ? RD::INITIAL_ACTION_LOAD : RD::INITIAL_ACTION_CLEAR, RD::FINAL_ACTION_STORE, (depth_pre_pass || load_depth) ? RD::INITIAL_ACTION_LOAD : RD::INITIAL_ACTION_CLEAR, RD::FINAL_ACTION_STORE, c, 0.0, 0, Rect2(), scissor_rect);
+			_render_list_with_draw_list(&render_list_params, opaque_framebuffer, load_color ? RD::INITIAL_ACTION_LOAD : RD::INITIAL_ACTION_CLEAR, RD::FINAL_ACTION_STORE, (depth_pre_pass || load_depth) ? RD::INITIAL_ACTION_LOAD : RD::INITIAL_ACTION_CLEAR, RD::FINAL_ACTION_STORE, c, 0.0, 0, Rect2(), scissor_rect, stencil_reference);
 		}
 
 		RD::get_singleton()->draw_command_end_label();
@@ -2131,7 +2136,8 @@ void RenderForwardClustered::_render_scene(RenderDataRD *p_render_data, const Co
 		if (using_motion_pass) {
 			Vector<Color> motion_vector_clear_colors;
 			motion_vector_clear_colors.push_back(Color(-1, -1, 0, 0));
-			RD::get_singleton()->draw_list_begin(rb_data->get_velocity_only_fb(), RD::INITIAL_ACTION_CLEAR, RD::FINAL_ACTION_STORE, RD::INITIAL_ACTION_LOAD, RD::FINAL_ACTION_STORE, motion_vector_clear_colors, 0, 0, Rect2(), scissor_rect);
+			auto draw_list = RD::get_singleton()->draw_list_begin(rb_data->get_velocity_only_fb(), RD::INITIAL_ACTION_CLEAR, RD::FINAL_ACTION_STORE, RD::INITIAL_ACTION_LOAD, RD::FINAL_ACTION_STORE, motion_vector_clear_colors, 0, 0, Rect2(), scissor_rect);
+			RD::get_singleton()->draw_list_set_stencil_reference(draw_list, RD::STENCIL_FACE_FRONT_AND_BACK, stencil_reference);
 			RD::get_singleton()->draw_list_end();
 		}
 
@@ -2143,7 +2149,7 @@ void RenderForwardClustered::_render_scene(RenderDataRD *p_render_data, const Co
 			rp_uniform_set = _setup_render_pass_uniform_set(RENDER_LIST_MOTION, p_render_data, radiance_texture, samplers, true);
 
 			RenderListParameters render_list_params(render_list[RENDER_LIST_MOTION].elements.ptr(), render_list[RENDER_LIST_MOTION].element_info.ptr(), render_list[RENDER_LIST_MOTION].elements.size(), reverse_cull, PASS_MODE_COLOR, color_pass_flags, rb_data.is_null(), p_render_data->directional_light_soft_shadows, rp_uniform_set, get_debug_draw_mode() == RS::VIEWPORT_DEBUG_DRAW_WIREFRAME, Vector2(), p_render_data->scene_data->lod_distance_multiplier, p_render_data->scene_data->screen_mesh_lod_threshold, p_render_data->scene_data->view_count, 0, spec_constant_base_flags);
-			_render_list_with_draw_list(&render_list_params, color_framebuffer, RD::INITIAL_ACTION_LOAD, RD::FINAL_ACTION_STORE, RD::INITIAL_ACTION_LOAD, RD::FINAL_ACTION_STORE);
+			_render_list_with_draw_list(&render_list_params, color_framebuffer, RD::INITIAL_ACTION_LOAD, RD::FINAL_ACTION_STORE, RD::INITIAL_ACTION_LOAD, RD::FINAL_ACTION_STORE, Vector<Color>(), 0.0f, 0u, Rect2(), scissor_rect, stencil_reference);
 
 			RD::get_singleton()->draw_command_end_label();
 		}
@@ -2164,6 +2170,7 @@ void RenderForwardClustered::_render_scene(RenderDataRD *p_render_data, const Co
 
 		RENDER_TIMESTAMP("Process Post Opaque Compositor Effects");
 		_process_compositor_effects(RS::COMPOSITOR_EFFECT_CALLBACK_TYPE_POST_OPAQUE, p_render_data);
+		stencil_reference = p_render_data->get_stencil_reference();
 	}
 
 	if (debug_voxelgis) {
@@ -2194,6 +2201,8 @@ void RenderForwardClustered::_render_scene(RenderDataRD *p_render_data, const Co
 
 		RD::get_singleton()->draw_command_begin_label("Draw Sky");
 		RD::DrawListID draw_list = RD::get_singleton()->draw_list_begin(color_only_framebuffer, RD::INITIAL_ACTION_LOAD, RD::FINAL_ACTION_STORE, RD::INITIAL_ACTION_LOAD, RD::FINAL_ACTION_STORE, Vector<Color>(), 0, 0, Rect2(), scissor_rect);
+
+		RD::get_singleton()->draw_list_set_stencil_reference(draw_list, RD::STENCIL_FACE_FRONT_AND_BACK, stencil_reference);
 
 		sky.draw_sky(draw_list, rb, p_render_data->environment, color_only_framebuffer, time, sky_energy_multiplier);
 
@@ -2226,6 +2235,7 @@ void RenderForwardClustered::_render_scene(RenderDataRD *p_render_data, const Co
 		RENDER_TIMESTAMP("Process Post Sky Compositor Effects");
 		// Don't need to check for depth or color resolve here, we've already triggered it.
 		_process_compositor_effects(RS::COMPOSITOR_EFFECT_CALLBACK_TYPE_POST_SKY, p_render_data);
+		stencil_reference = p_render_data->get_stencil_reference();
 	}
 
 	if (using_separate_specular) {
@@ -2258,7 +2268,8 @@ void RenderForwardClustered::_render_scene(RenderDataRD *p_render_data, const Co
 		RENDER_TIMESTAMP("Clear Separate Specular (Canvas Background Mode)");
 		Vector<Color> blank_clear_color;
 		blank_clear_color.push_back(Color(0.0, 0.0, 0.0));
-		RD::get_singleton()->draw_list_begin(rb_data->get_specular_only_fb(), RD::INITIAL_ACTION_CLEAR, RD::FINAL_ACTION_STORE, RD::INITIAL_ACTION_DISCARD, RD::FINAL_ACTION_DISCARD, blank_clear_color, 0, 0, Rect2(), scissor_rect);
+		auto draw_list = RD::get_singleton()->draw_list_begin(rb_data->get_specular_only_fb(), RD::INITIAL_ACTION_CLEAR, RD::FINAL_ACTION_STORE, RD::INITIAL_ACTION_DISCARD, RD::FINAL_ACTION_DISCARD, blank_clear_color, 0, 0, Rect2(), scissor_rect);
+		RD::get_singleton()->draw_list_set_stencil_reference(draw_list, RD::STENCIL_FACE_FRONT_AND_BACK, stencil_reference);
 		RD::get_singleton()->draw_list_end();
 	}
 
@@ -2303,6 +2314,7 @@ void RenderForwardClustered::_render_scene(RenderDataRD *p_render_data, const Co
 
 		RENDER_TIMESTAMP("Process Pre Transparent Compositor Effects");
 		_process_compositor_effects(RS::COMPOSITOR_EFFECT_CALLBACK_TYPE_PRE_TRANSPARENT, p_render_data);
+		stencil_reference = p_render_data->get_stencil_reference();
 	}
 
 	RENDER_TIMESTAMP("Render 3D Transparent Pass");
@@ -2322,7 +2334,7 @@ void RenderForwardClustered::_render_scene(RenderDataRD *p_render_data, const Co
 
 		RID alpha_framebuffer = rb_data.is_valid() ? rb_data->get_color_pass_fb(transparent_color_pass_flags) : color_only_framebuffer;
 		RenderListParameters render_list_params(render_list[RENDER_LIST_ALPHA].elements.ptr(), render_list[RENDER_LIST_ALPHA].element_info.ptr(), render_list[RENDER_LIST_ALPHA].elements.size(), false, PASS_MODE_COLOR, transparent_color_pass_flags, rb_data.is_null(), p_render_data->directional_light_soft_shadows, rp_uniform_set, get_debug_draw_mode() == RS::VIEWPORT_DEBUG_DRAW_WIREFRAME, Vector2(), p_render_data->scene_data->lod_distance_multiplier, p_render_data->scene_data->screen_mesh_lod_threshold, p_render_data->scene_data->view_count, 0, spec_constant_base_flags);
-		_render_list_with_draw_list(&render_list_params, alpha_framebuffer, RD::INITIAL_ACTION_LOAD, RD::FINAL_ACTION_STORE, RD::INITIAL_ACTION_LOAD, RD::FINAL_ACTION_STORE, Vector<Color>(), 0, 0, Rect2(), scissor_rect);
+		_render_list_with_draw_list(&render_list_params, alpha_framebuffer, RD::INITIAL_ACTION_LOAD, RD::FINAL_ACTION_STORE, RD::INITIAL_ACTION_LOAD, RD::FINAL_ACTION_STORE, Vector<Color>(), 0, 0, Rect2(), scissor_rect, stencil_reference);
 	}
 
 	RD::get_singleton()->draw_command_end_label();
@@ -2348,6 +2360,7 @@ void RenderForwardClustered::_render_scene(RenderDataRD *p_render_data, const Co
 	{
 		RENDER_TIMESTAMP("Process Post Transparent Compositor Effects");
 		_process_compositor_effects(RS::COMPOSITOR_EFFECT_CALLBACK_TYPE_POST_TRANSPARENT, p_render_data);
+		stencil_reference = p_render_data->get_stencil_reference();
 	}
 
 	RD::get_singleton()->draw_command_begin_label("Copy framebuffer for SSIL");

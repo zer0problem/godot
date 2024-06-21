@@ -97,6 +97,25 @@ void PipelineCacheRD::setup(RID p_shader, RD::RenderPrimitive p_primitive, const
 	blend_state = p_blend_state;
 	dynamic_state_flags = p_dynamic_state_flags;
 	base_specialization_constants = p_base_specialization_constants;
+
+	// HACK: TI - I really don't think this is where I'm supposed to do this
+	// But I will anyway
+	dynamic_state_flags |= RD::DYNAMIC_STATE_STENCIL_REFERENCE;
+	depth_stencil_state.enable_stencil = true;
+	depth_stencil_state.front_op.fail = RD::STENCIL_OP_KEEP;
+	depth_stencil_state.front_op.pass = RD::STENCIL_OP_KEEP;
+	depth_stencil_state.front_op.depth_fail = RD::STENCIL_OP_KEEP;
+	depth_stencil_state.front_op.compare = RD::COMPARE_OP_EQUAL;
+	depth_stencil_state.front_op.compare_mask = 0xFFFFFFFF;
+	depth_stencil_state.front_op.write_mask = 0;
+	depth_stencil_state.front_op.reference = 0;
+	depth_stencil_state.back_op.fail = RD::STENCIL_OP_KEEP;
+	depth_stencil_state.back_op.pass = RD::STENCIL_OP_KEEP;
+	depth_stencil_state.back_op.depth_fail = RD::STENCIL_OP_KEEP;
+	depth_stencil_state.back_op.compare = RD::COMPARE_OP_EQUAL;
+	depth_stencil_state.back_op.compare_mask = 0xFFFFFFFF;
+	depth_stencil_state.back_op.write_mask = 0;
+	depth_stencil_state.back_op.reference = 0;
 }
 void PipelineCacheRD::update_specialization_constants(const Vector<RD::PipelineSpecializationConstant> &p_base_specialization_constants) {
 	base_specialization_constants = p_base_specialization_constants;

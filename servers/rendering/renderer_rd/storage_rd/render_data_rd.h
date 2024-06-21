@@ -49,6 +49,11 @@ public:
 	virtual RID get_environment() const override;
 	virtual RID get_camera_attributes() const override;
 
+	// HACK: TI - Stencil reference
+	virtual int get_stencil_reference() const override;
+	virtual void set_stencil_reference(int p_stencil_reference) override;
+	int stencil_reference = 0;
+	
 	// Members are publicly accessible within the render engine.
 	Ref<RenderSceneBuffersRD> render_buffers;
 	RenderSceneDataRD *scene_data = nullptr;

@@ -48,3 +48,11 @@ RID RenderDataRD::get_environment() const {
 RID RenderDataRD::get_camera_attributes() const {
 	return camera_attributes;
 }
+
+int RenderDataRD::get_stencil_reference() const {
+	return stencil_reference;
+}
+
+void RenderDataRD::set_stencil_reference(int p_stencil_reference) {
+	stencil_reference = p_stencil_reference;
+}

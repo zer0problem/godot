@@ -47,6 +47,10 @@ public:
 
 	virtual RID get_environment() const = 0;
 	virtual RID get_camera_attributes() const = 0;
+
+	// HACK: TI - Set stencil reference
+	virtual int get_stencil_reference() const = 0;
+	virtual void set_stencil_reference(int p_stencil_reference) = 0;
 };
 
 class RenderDataExtension : public RenderData {
@@ -60,6 +64,14 @@ protected:
 
 	virtual RID get_environment() const override;
 	virtual RID get_camera_attributes() const override;
+
+	// HACK: TI - Set stencil reference
+	virtual int get_stencil_reference() const override;
+	virtual void set_stencil_reference(int p_stencil_reference) override;
+
+	// HACK: TI - Set stencil reference
+	GDVIRTUAL0RC(int, _get_stencil_reference)
+	GDVIRTUAL1(_set_stencil_reference, int)
 
 	GDVIRTUAL0RC(Ref<RenderSceneBuffers>, _get_render_scene_buffers)
 	GDVIRTUAL0RC(RenderSceneData *, _get_render_scene_data)
