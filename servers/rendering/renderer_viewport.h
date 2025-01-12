@@ -220,6 +220,8 @@ public:
 	RID viewport_allocate();
 	void viewport_initialize(RID p_rid);
 
+	void viewport_camera_force_render(RID p_viewport, RID p_camera);
+
 	void viewport_set_use_xr(RID p_viewport, bool p_use_xr);
 
 	void viewport_set_size(RID p_viewport, int p_width, int p_height);

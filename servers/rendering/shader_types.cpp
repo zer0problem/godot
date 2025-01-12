@@ -201,6 +201,9 @@ ShaderTypes::ShaderTypes() {
 	shader_modes[RS::SHADER_SPATIAL].functions["light"].built_ins["SPECULAR_LIGHT"] = ShaderLanguage::TYPE_VEC3;
 	shader_modes[RS::SHADER_SPATIAL].functions["light"].built_ins["ALPHA"] = ShaderLanguage::TYPE_FLOAT;
 	shader_modes[RS::SHADER_SPATIAL].functions["light"].built_ins["SCREEN_UV"] = constt(ShaderLanguage::TYPE_VEC2);
+	// NOTE: TI - Expose light_mask and visible layers
+	shader_modes[RS::SHADER_SPATIAL].functions["light"].built_ins["LIGHT_MASK"] = constt(ShaderLanguage::TYPE_UINT);
+	shader_modes[RS::SHADER_SPATIAL].functions["light"].built_ins["LIGHT_VISIBLE_LAYERS"] = constt(ShaderLanguage::TYPE_UINT);
 
 	shader_modes[RS::SHADER_SPATIAL].functions["light"].can_discard = true;
 	shader_modes[RS::SHADER_SPATIAL].functions["light"].main_function = true;
@@ -229,6 +232,29 @@ ShaderTypes::ShaderTypes() {
 		shader_modes[RS::SHADER_SPATIAL].modes.push_back({ PNAME("alpha_to_coverage_and_one") });
 		shader_modes[RS::SHADER_SPATIAL].modes.push_back({ PNAME("debug_shadow_splits") });
 		shader_modes[RS::SHADER_SPATIAL].modes.push_back({ PNAME("fog_disabled") });
+
+		{
+			shader_modes[RS::SHADER_SPATIAL].modes.push_back({ PNAME("dynamic_stencil_compare_mask") });
+			shader_modes[RS::SHADER_SPATIAL].modes.push_back({ PNAME("dynamic_stencil_write_mask") });
+			shader_modes[RS::SHADER_SPATIAL].modes.push_back({ PNAME("dynamic_stencil_reference") });
+
+			shader_modes[RS::SHADER_SPATIAL].modes.push_back({ PNAME("enable_stencil") });
+
+			shader_modes[RS::SHADER_SPATIAL].modes.push_back({ PNAME("stencil_back_op_fail"), "keep", "zero", "replace", "increment_and_clamp", "decrement_and_clamp", "invert", "increment_and_wrap", "decrement_and_wrap" });
+			shader_modes[RS::SHADER_SPATIAL].modes.push_back({ PNAME("stencil_back_op_pass"), "keep", "zero", "replace", "increment_and_clamp", "decrement_and_clamp", "invert", "increment_and_wrap", "decrement_and_wrap" });
+			shader_modes[RS::SHADER_SPATIAL].modes.push_back({ PNAME("stencil_back_op_depth_fail"), "keep", "zero", "replace", "increment_and_clamp", "decrement_and_clamp", "invert", "increment_and_wrap", "decrement_and_wrap" });
+			shader_modes[RS::SHADER_SPATIAL].modes.push_back({ PNAME("stencil_front_op_fail"), "keep", "zero", "replace", "increment_and_clamp", "decrement_and_clamp", "invert", "increment_and_wrap", "decrement_and_wrap" });
+			shader_modes[RS::SHADER_SPATIAL].modes.push_back({ PNAME("stencil_front_op_pass"), "keep", "zero", "replace", "increment_and_clamp", "decrement_and_clamp", "invert", "increment_and_wrap", "decrement_and_wrap" });
+			shader_modes[RS::SHADER_SPATIAL].modes.push_back({ PNAME("stencil_front_op_depth_fail"), "keep", "zero", "replace", "increment_and_clamp", "decrement_and_clamp", "invert", "increment_and_wrap", "decrement_and_wrap" });
+
+			shader_modes[RS::SHADER_SPATIAL].modes.push_back({ PNAME("stencil_front_compare"), "never", "less", "equal", "less_or_equal", "greater", "not_equal", "greater_or_equal", "always" });
+			shader_modes[RS::SHADER_SPATIAL].modes.push_back({ PNAME("stencil_back_compare"), "never", "less", "equal", "less_or_equal", "greater", "not_equal", "greater_or_equal", "always" });
+			
+			shader_modes[RS::SHADER_SPATIAL].modes.push_back({ PNAME("stencil_front_compare_mask_all") });
+			shader_modes[RS::SHADER_SPATIAL].modes.push_back({ PNAME("stencil_front_write_mask_all") });
+			shader_modes[RS::SHADER_SPATIAL].modes.push_back({ PNAME("stencil_back_compare_mask_all") });
+			shader_modes[RS::SHADER_SPATIAL].modes.push_back({ PNAME("stencil_back_write_mask_all") });
+		}
 	}
 
 	/************ CANVAS ITEM **************************/

@@ -42,6 +42,7 @@ class CompositorEffect : public Resource {
 
 public:
 	enum EffectCallbackType {
+		EFFECT_CALLBACK_TYPE_PRE_DEPTH,
 		EFFECT_CALLBACK_TYPE_PRE_OPAQUE,
 		EFFECT_CALLBACK_TYPE_POST_OPAQUE,
 		EFFECT_CALLBACK_TYPE_POST_SKY,

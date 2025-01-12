@@ -179,6 +179,11 @@ public:
 			uint32_t wireframe = false;
 			uint32_t ubershader = false;
 
+			BitField<RenderingDeviceCommons::PipelineDynamicStateFlags> dynamic_state_flags = 0;
+			bool enable_stencil = false;
+			RenderingDeviceCommons::PipelineDepthStencilState::StencilOperationState stencil_back_op;
+			RenderingDeviceCommons::PipelineDepthStencilState::StencilOperationState stencil_front_op;
+
 			uint32_t hash() const {
 				uint32_t h = hash_murmur3_one_64(vertex_format_id);
 				h = hash_murmur3_one_32(framebuffer_format_id, h);
@@ -191,6 +196,24 @@ public:
 				h = hash_murmur3_one_32(shader_specialization.packed_2, h);
 				h = hash_murmur3_one_32(wireframe, h);
 				h = hash_murmur3_one_32(ubershader, h);
+
+				h = hash_murmur3_one_32(dynamic_state_flags, h);
+				h = hash_murmur3_one_32(enable_stencil, h);
+				h = hash_murmur3_one_32(stencil_back_op.fail, h);
+				h = hash_murmur3_one_32(stencil_back_op.pass, h);
+				h = hash_murmur3_one_32(stencil_back_op.depth_fail, h);
+				h = hash_murmur3_one_32(stencil_back_op.compare, h);
+				h = hash_murmur3_one_32(stencil_back_op.compare_mask, h);
+				h = hash_murmur3_one_32(stencil_back_op.write_mask, h);
+				h = hash_murmur3_one_32(stencil_back_op.reference, h);
+				h = hash_murmur3_one_32(stencil_front_op.fail, h);
+				h = hash_murmur3_one_32(stencil_front_op.pass, h);
+				h = hash_murmur3_one_32(stencil_front_op.depth_fail, h);
+				h = hash_murmur3_one_32(stencil_front_op.compare, h);
+				h = hash_murmur3_one_32(stencil_front_op.compare_mask, h);
+				h = hash_murmur3_one_32(stencil_front_op.write_mask, h);
+				h = hash_murmur3_one_32(stencil_front_op.reference, h);
+
 				return hash_fmix32(h);
 			}
 		};
@@ -249,6 +272,11 @@ public:
 
 		uint64_t last_pass = 0;
 		uint32_t index = 0;
+
+		BitField<RenderingDeviceCommons::PipelineDynamicStateFlags> dynamic_state_flags = 0;
+		bool enable_stencil = false;
+		RenderingDeviceCommons::PipelineDepthStencilState::StencilOperationState stencil_back_op;
+		RenderingDeviceCommons::PipelineDepthStencilState::StencilOperationState stencil_front_op;
 
 		_FORCE_INLINE_ bool uses_alpha_pass() const {
 			bool has_read_screen_alpha = uses_screen_texture || uses_depth_texture || uses_normal_texture;

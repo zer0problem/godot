@@ -328,6 +328,16 @@ void LightStorage::light_set_max_sdfgi_cascade(RID p_light, uint32_t p_cascade) 
 	light->dependency.changed_notify(Dependency::DEPENDENCY_CHANGED_LIGHT);
 }
 
+void RendererRD::LightStorage::light_set_shadow_source(RID p_light, RID p_shadow_source) {
+	Light *light = light_owner.get_or_null(p_light);
+	ERR_FAIL_NULL(light);
+
+	light->shadow_source = p_shadow_source;
+
+	light->version++;
+	light->dependency.changed_notify(Dependency::DEPENDENCY_CHANGED_LIGHT);
+}
+
 void LightStorage::light_omni_set_shadow_mode(RID p_light, RS::LightOmniShadowMode p_mode) {
 	Light *light = light_owner.get_or_null(p_light);
 	ERR_FAIL_NULL(light);
@@ -528,6 +538,13 @@ void LightStorage::light_instance_set_shadow_transform(RID p_light_instance, con
 	light_instance->shadow_transform[p_pass].uv_scale = p_uv_scale;
 }
 
+void LightStorage::light_instance_set_shadow_source(RID p_light_instance, RID p_shadow_source) {
+	LightInstance *light_instance = light_instance_owner.get_or_null(p_light_instance);
+	ERR_FAIL_NULL(light_instance);
+
+	light_instance->shadow_source = p_shadow_source;
+}
+
 void LightStorage::light_instance_mark_visible(RID p_light_instance) {
 	LightInstance *light_instance = light_instance_owner.get_or_null(p_light_instance);
 	ERR_FAIL_NULL(light_instance);
@@ -616,6 +633,7 @@ void LightStorage::update_light_buffers(RenderDataRD *p_render_data, const Paged
 		if (!light_instance) {
 			continue;
 		}
+
 		Light *light = light_owner.get_or_null(light_instance->light);
 
 		ERR_CONTINUE(light == nullptr);
@@ -824,6 +842,11 @@ void LightStorage::update_light_buffers(RenderDataRD *p_render_data, const Paged
 		Light *light = (i < omni_light_count) ? omni_light_sort[index].light : spot_light_sort[index].light;
 		real_t distance = (i < omni_light_count) ? omni_light_sort[index].depth : spot_light_sort[index].depth;
 
+		// HACK: TI - using shadow source instead of self to fetch shadow data
+		const RID default_shadow_source = light_instance->self;
+		const RID dynamic_shadow_source = light_instance_get_shadow_source(light_instance->self);
+		const RID shadow_source = dynamic_shadow_source.is_valid() ? dynamic_shadow_source : default_shadow_source;
+
 		if (using_forward_ids) {
 			forward_id_storage->map_forward_id(type == RS::LIGHT_OMNI ? RendererRD::FORWARD_ID_TYPE_OMNI_LIGHT : RendererRD::FORWARD_ID_TYPE_SPOT_LIGHT, light_instance->forward_id, index, light_instance->last_pass);
 		}
@@ -941,7 +964,7 @@ void LightStorage::update_light_buffers(RenderDataRD *p_render_data, const Paged
 		const bool needs_shadow =
 				p_using_shadows &&
 				owns_shadow_atlas(p_shadow_atlas) &&
-				shadow_atlas_owns_light_instance(p_shadow_atlas, light_instance->self) &&
+				shadow_atlas_owns_light_instance(p_shadow_atlas, shadow_source) &&
 				light->shadow;
 
 		bool in_shadow_range = true;
@@ -957,7 +980,7 @@ void LightStorage::update_light_buffers(RenderDataRD *p_render_data, const Paged
 
 			light_data.shadow_opacity = light->param[RS::LIGHT_PARAM_SHADOW_OPACITY] * shadow_opacity_fade;
 
-			float shadow_texel_size = light_instance_get_shadow_texel_size(light_instance->self, p_shadow_atlas);
+			float shadow_texel_size = light_instance_get_shadow_texel_size(shadow_source, p_shadow_atlas);
 			light_data.shadow_normal_bias = light->param[RS::LIGHT_PARAM_SHADOW_NORMAL_BIAS] * shadow_texel_size * 10.0;
 
 			if (type == RS::LIGHT_SPOT) {
@@ -969,7 +992,7 @@ void LightStorage::update_light_buffers(RenderDataRD *p_render_data, const Paged
 			light_data.transmittance_bias = light->param[RS::LIGHT_PARAM_TRANSMITTANCE_BIAS];
 
 			Vector2i omni_offset;
-			Rect2 rect = light_instance_get_shadow_atlas_rect(light_instance->self, p_shadow_atlas, omni_offset);
+			Rect2 rect = light_instance_get_shadow_atlas_rect(shadow_source, p_shadow_atlas, omni_offset);
 
 			light_data.atlas_rect[0] = rect.position.x;
 			light_data.atlas_rect[1] = rect.position.y;
@@ -2351,6 +2374,7 @@ bool LightStorage::_shadow_atlas_find_omni_shadows(ShadowAtlas *shadow_atlas, in
 }
 
 bool LightStorage::shadow_atlas_update_light(RID p_atlas, RID p_light_instance, float p_coverage, uint64_t p_light_version) {
+	p_coverage = 1000.0f;
 	ShadowAtlas *shadow_atlas = shadow_atlas_owner.get_or_null(p_atlas);
 	ERR_FAIL_NULL_V(shadow_atlas, false);
 
@@ -2408,7 +2432,7 @@ bool LightStorage::shadow_atlas_update_light(RID p_atlas, RID p_light_instance, 
 		old_quadrant = (old_key >> QUADRANT_SHIFT) & 0x3;
 		old_shadow = old_key & SHADOW_INDEX_MASK;
 
-		should_realloc = shadow_atlas->quadrants[old_quadrant].subdivision != (uint32_t)best_subdiv && (tick - shadow_atlas->quadrants[old_quadrant].shadows[old_shadow].alloc_tick > shadow_atlas_realloc_tolerance_msec);
+		should_realloc = shadow_atlas->quadrants[old_quadrant].subdivision != (uint32_t)best_subdiv && (tick - shadow_atlas->quadrants[old_quadrant].shadows[old_shadow].alloc_tick) > shadow_atlas_realloc_tolerance_msec;
 		should_redraw = shadow_atlas->quadrants[old_quadrant].shadows[old_shadow].version != p_light_version;
 
 		if (!should_realloc) {

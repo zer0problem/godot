@@ -909,6 +909,22 @@ void RendererViewport::viewport_initialize(RID p_rid) {
 	viewport->fsr_enabled = !RSG::rasterizer->is_low_end() && !viewport->disable_3d;
 }
 
+void RendererViewport::viewport_camera_force_render(RID p_viewport, RID p_camera) {
+	Viewport *viewport = viewport_owner.get_or_null(p_viewport);
+
+	if (viewport == nullptr) {
+		return;
+	}
+
+	Ref<XRInterface> xr_interface;
+	if (viewport->use_xr && XRServer::get_singleton() != nullptr) {
+		xr_interface = XRServer::get_singleton()->get_primary_interface();
+	}
+
+	float screen_mesh_lod_threshold = viewport->mesh_lod_threshold / float(viewport->size.width);
+	RSG::scene->render_camera(viewport->render_buffers, p_camera, viewport->scenario, viewport->self, viewport->internal_size, viewport->jitter_phase_count, screen_mesh_lod_threshold, viewport->shadow_atlas, xr_interface, &viewport->render_info);
+}
+
 void RendererViewport::viewport_set_use_xr(RID p_viewport, bool p_use_xr) {
 	Viewport *viewport = viewport_owner.get_or_null(p_viewport);
 	ERR_FAIL_NULL(viewport);

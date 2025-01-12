@@ -63,6 +63,8 @@ public:
 	virtual uint32_t light_get_shadow_caster_mask(RID p_light) const = 0;
 	virtual void light_set_bake_mode(RID p_light, RS::LightBakeMode p_bake_mode) = 0;
 	virtual void light_set_max_sdfgi_cascade(RID p_light, uint32_t p_cascade) = 0;
+	virtual void light_set_shadow_source(RID p_light, RID p_shadow_source) = 0;
+	virtual void light_set_clear_frame(RID p_light, int p_pass, uint64_t p_clear_frame) = 0;
 
 	virtual void light_omni_set_shadow_mode(RID p_light, RS::LightOmniShadowMode p_mode) = 0;
 
@@ -88,6 +90,8 @@ public:
 	virtual uint32_t light_get_max_sdfgi_cascade(RID p_light) = 0;
 	virtual uint64_t light_get_version(RID p_light) const = 0;
 	virtual uint32_t light_get_cull_mask(RID p_light) const = 0;
+	virtual RID light_get_shadow_source(RID p_light) const = 0;
+	virtual uint64_t light_get_clear_frame(RID p_light, int p_pass) const = 0;
 
 	/* LIGHT INSTANCE API */
 
@@ -96,6 +100,8 @@ public:
 	virtual void light_instance_set_transform(RID p_light_instance, const Transform3D &p_transform) = 0;
 	virtual void light_instance_set_aabb(RID p_light_instance, const AABB &p_aabb) = 0;
 	virtual void light_instance_set_shadow_transform(RID p_light_instance, const Projection &p_projection, const Transform3D &p_transform, float p_far, float p_split, int p_pass, float p_shadow_texel_size, float p_bias_scale = 1.0, float p_range_begin = 0, const Vector2 &p_uv_scale = Vector2()) = 0;
+	virtual void light_instance_set_shadow_source(RID p_light_instance, RID p_shadow_source) = 0;
+	virtual RID light_instance_get_shadow_source(RID p_light_instance) const = 0;
 	virtual void light_instance_mark_visible(RID p_light_instance) = 0;
 	virtual bool light_instances_can_render_shadow_cube() const {
 		return true;

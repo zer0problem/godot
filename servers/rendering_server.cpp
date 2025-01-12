@@ -2800,6 +2800,8 @@ void RenderingServer::_bind_methods() {
 
 	/* VIEWPORT */
 
+	ClassDB::bind_method(D_METHOD("viewport_camera_force_render", "viewport", "camera"), &RenderingServer::viewport_camera_force_render);
+
 	ClassDB::bind_method(D_METHOD("viewport_create"), &RenderingServer::viewport_create);
 	ClassDB::bind_method(D_METHOD("viewport_set_use_xr", "viewport", "use_xr"), &RenderingServer::viewport_set_use_xr);
 	ClassDB::bind_method(D_METHOD("viewport_set_size", "viewport", "width", "height"), &RenderingServer::viewport_set_size);
@@ -2990,6 +2992,7 @@ void RenderingServer::_bind_methods() {
 	BIND_ENUM_CONSTANT(COMPOSITOR_EFFECT_FLAG_NEEDS_ROUGHNESS);
 	BIND_ENUM_CONSTANT(COMPOSITOR_EFFECT_FLAG_NEEDS_SEPARATE_SPECULAR);
 
+	BIND_ENUM_CONSTANT(COMPOSITOR_EFFECT_CALLBACK_TYPE_PRE_DEPTH);
 	BIND_ENUM_CONSTANT(COMPOSITOR_EFFECT_CALLBACK_TYPE_PRE_OPAQUE);
 	BIND_ENUM_CONSTANT(COMPOSITOR_EFFECT_CALLBACK_TYPE_POST_OPAQUE);
 	BIND_ENUM_CONSTANT(COMPOSITOR_EFFECT_CALLBACK_TYPE_POST_SKY);

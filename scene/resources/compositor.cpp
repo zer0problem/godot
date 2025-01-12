@@ -63,6 +63,7 @@ void CompositorEffect::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_needs_separate_specular"), &CompositorEffect::get_needs_separate_specular);
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "needs_separate_specular"), "set_needs_separate_specular", "get_needs_separate_specular");
 
+	BIND_ENUM_CONSTANT(EFFECT_CALLBACK_TYPE_PRE_DEPTH)
 	BIND_ENUM_CONSTANT(EFFECT_CALLBACK_TYPE_PRE_OPAQUE)
 	BIND_ENUM_CONSTANT(EFFECT_CALLBACK_TYPE_POST_OPAQUE)
 	BIND_ENUM_CONSTANT(EFFECT_CALLBACK_TYPE_POST_SKY)

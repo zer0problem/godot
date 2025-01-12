@@ -547,6 +547,7 @@ public:
 	virtual void light_set_distance_fade(RID p_light, bool p_enabled, float p_begin, float p_shadow, float p_length) = 0;
 	virtual void light_set_reverse_cull_face_mode(RID p_light, bool p_enabled) = 0;
 	virtual void light_set_shadow_caster_mask(RID p_light, uint32_t p_caster_mask) = 0;
+	virtual void light_set_shadow_source(RID p_light, RID p_shadow_source) = 0;
 
 	enum LightBakeMode {
 		LIGHT_BAKE_DISABLED,
@@ -891,6 +892,12 @@ public:
 	virtual void camera_set_compositor(RID p_camera, RID p_compositor) = 0;
 	virtual void camera_set_use_vertical_aspect(RID p_camera, bool p_enable) = 0;
 
+	// HACK: TI - Camera set scissors
+	virtual void camera_set_use_scissor(RID p_camera, bool p_use_scissor) = 0;
+	virtual void camera_set_scissor_rect(RID p_camera, Rect2i p_scissor_rect) = 0;
+	virtual bool camera_get_use_scissor(RID p_camera) const = 0;
+	virtual Rect2i camera_get_scissor_rect(RID p_camera) const = 0;
+
 	/* VIEWPORT API */
 
 	enum CanvasItemTextureFilter {
@@ -930,6 +937,8 @@ public:
 		VIEWPORT_ANISOTROPY_16X,
 		VIEWPORT_ANISOTROPY_MAX
 	};
+
+	virtual void viewport_camera_force_render(RID p_viewport, RID p_camera) = 0;
 
 	virtual void viewport_set_use_xr(RID p_viewport, bool p_use_xr) = 0;
 	virtual void viewport_set_size(RID p_viewport, int p_width, int p_height) = 0;
@@ -1152,6 +1161,7 @@ public:
 	};
 
 	enum CompositorEffectCallbackType {
+		COMPOSITOR_EFFECT_CALLBACK_TYPE_PRE_DEPTH,
 		COMPOSITOR_EFFECT_CALLBACK_TYPE_PRE_OPAQUE,
 		COMPOSITOR_EFFECT_CALLBACK_TYPE_POST_OPAQUE,
 		COMPOSITOR_EFFECT_CALLBACK_TYPE_POST_SKY,
@@ -1186,6 +1196,12 @@ public:
 		ENV_BG_MAX
 	};
 
+	enum EnvironmentDepthMode {
+		ENV_DEPTH_MODE_CLEAR,
+		ENV_DEPTH_MODE_KEEP,
+		ENV_DEPTH_MODE_MAX,
+	};
+
 	enum EnvironmentAmbientSource {
 		ENV_AMBIENT_SOURCE_BG,
 		ENV_AMBIENT_SOURCE_DISABLED,
@@ -1200,6 +1216,7 @@ public:
 	};
 
 	virtual void environment_set_background(RID p_env, EnvironmentBG p_bg) = 0;
+	virtual void environment_set_depth_mode(RID p_env, EnvironmentDepthMode p_dm) = 0;
 	virtual void environment_set_sky(RID p_env, RID p_sky) = 0;
 	virtual void environment_set_sky_custom_fov(RID p_env, float p_scale) = 0;
 	virtual void environment_set_sky_orientation(RID p_env, const Basis &p_orientation) = 0;

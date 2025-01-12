@@ -613,6 +613,12 @@ public:
 		POLYGON_FRONT_FACE_COUNTER_CLOCKWISE,
 	};
 
+	enum StencilFaceFlagBits {
+		STENCIL_FACE_FRONT_BIT = 0x1,
+		STENCIL_FACE_BACK_BIT = 0x2,
+		STENCIL_FACE_FRONT_AND_BACK = 0x3,
+	};
+
 	enum StencilOperation {
 		STENCIL_OP_KEEP,
 		STENCIL_OP_ZERO,

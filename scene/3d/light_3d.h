@@ -87,6 +87,7 @@ private:
 	Ref<Texture2D> projector;
 	Color correlated_color = Color(1.0, 1.0, 1.0);
 	float temperature = 6500.0;
+	RID shadow_source = RID();
 
 	// bind helpers
 
@@ -149,6 +150,8 @@ public:
 	void set_temperature(const float p_temperature);
 	float get_temperature() const;
 	Color get_correlated_color() const;
+
+	void set_shadow_source(Light3D *p_light_source);
 
 	virtual AABB get_aabb() const override;
 	virtual PackedStringArray get_configuration_warnings() const override;

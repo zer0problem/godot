@@ -35,6 +35,7 @@
 #include "../rasterizer_scene_gles3.h"
 #include "core/config/project_settings.h"
 #include "texture_storage.h"
+#include "light_storage.h"
 
 using namespace GLES3;
 
@@ -227,6 +228,10 @@ uint32_t LightStorage::light_get_shadow_caster_mask(RID p_light) const {
 	ERR_FAIL_NULL_V(light, 0);
 
 	return light->shadow_caster_mask;
+}
+
+void LightStorage::light_set_shadow_source(RID p_light, RID p_shadow_source) {
+	ERR_FAIL();
 }
 
 void LightStorage::light_set_distance_fade(RID p_light, bool p_enabled, float p_begin, float p_shadow, float p_length) {
@@ -427,6 +432,10 @@ void LightStorage::light_instance_set_shadow_transform(RID p_light_instance, con
 	light_instance->shadow_transform[p_pass].range_begin = p_range_begin;
 	light_instance->shadow_transform[p_pass].shadow_texel_size = p_shadow_texel_size;
 	light_instance->shadow_transform[p_pass].uv_scale = p_uv_scale;
+}
+
+void LightStorage::light_instance_set_shadow_source(RID p_light_instance, RID p_shadow_source) {
+	ERR_FAIL();
 }
 
 void LightStorage::light_instance_mark_visible(RID p_light_instance) {

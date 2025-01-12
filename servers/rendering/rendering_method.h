@@ -47,6 +47,12 @@ public:
 	virtual RID camera_allocate() = 0;
 	virtual void camera_initialize(RID p_rid) = 0;
 
+	// HACK: TI - scissor rect stuff
+	virtual void camera_set_use_scissor(RID p_camera, bool p_use_scissor) = 0;
+	virtual void camera_set_scissor_rect(RID p_camera, Rect2i p_scissor_rect) = 0;
+	virtual bool camera_get_use_scissor(RID p_camera) const = 0;
+	virtual Rect2i camera_get_scissor_rect(RID p_camera) const = 0;
+
 	virtual void camera_set_perspective(RID p_camera, float p_fovy_degrees, float p_z_near, float p_z_far) = 0;
 	virtual void camera_set_orthogonal(RID p_camera, float p_size, float p_z_near, float p_z_far) = 0;
 	virtual void camera_set_frustum(RID p_camera, float p_size, Vector2 p_offset, float p_z_near, float p_z_far) = 0;
@@ -161,6 +167,7 @@ public:
 
 	// Background
 	virtual void environment_set_background(RID p_env, RS::EnvironmentBG p_bg) = 0;
+	virtual void environment_set_depth_mode(RID p_env, RS::EnvironmentDepthMode p_dm) = 0;
 	virtual void environment_set_sky(RID p_env, RID p_sky) = 0;
 	virtual void environment_set_sky_custom_fov(RID p_env, float p_scale) = 0;
 	virtual void environment_set_sky_orientation(RID p_env, const Basis &p_orientation) = 0;

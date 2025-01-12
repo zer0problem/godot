@@ -329,6 +329,7 @@ public:
 	virtual void light_set_reverse_cull_face_mode(RID p_light, bool p_enabled) override;
 	virtual void light_set_shadow_caster_mask(RID p_light, uint32_t p_caster_mask) override;
 	virtual uint32_t light_get_shadow_caster_mask(RID p_light) const override;
+	virtual void light_set_shadow_source(RID p_light, RID p_shadow_source) override;
 	virtual void light_set_bake_mode(RID p_light, RS::LightBakeMode p_bake_mode) override;
 	virtual void light_set_max_sdfgi_cascade(RID p_light, uint32_t p_cascade) override {}
 
@@ -426,6 +427,13 @@ public:
 		return light->reverse_cull;
 	}
 
+	virtual RID light_get_shadow_source(RID p_light) const override {
+		ERR_FAIL_V(RID());
+	}
+
+	virtual void light_set_clear_frame(RID p_light, int p_pass, uint64_t p_clear_frame) {}
+	virtual uint64_t light_get_clear_frame(RID p_light, int p_pass) const { return 0; }
+
 	virtual RS::LightBakeMode light_get_bake_mode(RID p_light) override;
 	virtual uint32_t light_get_max_sdfgi_cascade(RID p_light) override { return 0; }
 	virtual uint64_t light_get_version(RID p_light) const override;
@@ -442,6 +450,8 @@ public:
 	virtual void light_instance_set_transform(RID p_light_instance, const Transform3D &p_transform) override;
 	virtual void light_instance_set_aabb(RID p_light_instance, const AABB &p_aabb) override;
 	virtual void light_instance_set_shadow_transform(RID p_light_instance, const Projection &p_projection, const Transform3D &p_transform, float p_far, float p_split, int p_pass, float p_shadow_texel_size, float p_bias_scale = 1.0, float p_range_begin = 0, const Vector2 &p_uv_scale = Vector2()) override;
+	virtual void light_instance_set_shadow_source(RID p_light_instance, RID p_shadow_source) override;
+	virtual RID light_instance_get_shadow_source(RID p_light_instance) const override { return RID(); }
 	virtual void light_instance_mark_visible(RID p_light_instance) override;
 
 	virtual bool light_instance_is_shadow_visible_at_position(RID p_light_instance, const Vector3 &p_position) const override {

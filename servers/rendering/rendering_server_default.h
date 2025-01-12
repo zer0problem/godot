@@ -445,6 +445,7 @@ public:
 	FUNC5(light_set_distance_fade, RID, bool, float, float, float)
 	FUNC2(light_set_reverse_cull_face_mode, RID, bool)
 	FUNC2(light_set_shadow_caster_mask, RID, uint32_t)
+	FUNC2(light_set_shadow_source, RID, RID)
 	FUNC2(light_set_bake_mode, RID, LightBakeMode)
 	FUNC2(light_set_max_sdfgi_cascade, RID, uint32_t)
 
@@ -661,6 +662,11 @@ public:
 	FUNC2(camera_set_camera_attributes, RID, RID)
 	FUNC2(camera_set_compositor, RID, RID)
 	FUNC2(camera_set_use_vertical_aspect, RID, bool)
+	// HACK: TI - Camera scissor hack
+	FUNC2(camera_set_use_scissor, RID, bool)
+	FUNC2(camera_set_scissor_rect, RID, Rect2i)
+	FUNC1RC(bool, camera_get_use_scissor, RID)
+	FUNC1RC(Rect2i, camera_get_scissor_rect, RID)
 
 	/* OCCLUDER */
 	FUNCRIDSPLIT(occluder)
@@ -686,6 +692,8 @@ public:
 
 	FUNC3(viewport_attach_to_screen, RID, const Rect2 &, int)
 	FUNC2(viewport_set_render_direct_to_screen, RID, bool)
+
+	FUNC2(viewport_camera_force_render, RID, RID)
 
 	FUNC2(viewport_set_scaling_3d_mode, RID, ViewportScaling3DMode)
 	FUNC2(viewport_set_scaling_3d_scale, RID, float)
@@ -786,6 +794,7 @@ public:
 	FUNCRIDSPLIT(environment)
 
 	FUNC2(environment_set_background, RID, EnvironmentBG)
+	FUNC2(environment_set_depth_mode, RID, EnvironmentDepthMode)
 	FUNC2(environment_set_sky, RID, RID)
 	FUNC2(environment_set_sky_custom_fov, RID, float)
 	FUNC2(environment_set_sky_orientation, RID, const Basis &)

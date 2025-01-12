@@ -81,6 +81,9 @@ private:
 		RS::LightDirectionalShadowMode directional_shadow_mode = RS::LIGHT_DIRECTIONAL_SHADOW_ORTHOGONAL;
 		bool directional_blend_splits = false;
 		RS::LightDirectionalSkyMode directional_sky_mode = RS::LIGHT_DIRECTIONAL_SKY_MODE_LIGHT_AND_SKY;
+		RID shadow_source = RID();
+		uint64_t clear_frame[6] = { 0 };
+		uint64_t coverage_per_frame[2] = { 0 };
 		uint64_t version = 0;
 
 		Dependency dependency;
@@ -122,6 +125,9 @@ private:
 		uint64_t last_pass = 0;
 		uint32_t cull_mask = 0;
 		uint32_t light_directional_index = 0;
+		// HACK: TI - Store last shadow render pass
+		uint64_t last_scene_shadow_render_pass[6] = { 0 };
+		RID shadow_source = RID();
 
 		Rect2 directional_rect;
 
@@ -494,7 +500,7 @@ public:
 	virtual uint32_t light_get_shadow_caster_mask(RID p_light) const override;
 	virtual void light_set_bake_mode(RID p_light, RS::LightBakeMode p_bake_mode) override;
 	virtual void light_set_max_sdfgi_cascade(RID p_light, uint32_t p_cascade) override;
-
+	virtual void light_set_shadow_source(RID p_light, RID p_shadow_source) override;
 	virtual void light_omni_set_shadow_mode(RID p_light, RS::LightOmniShadowMode p_mode) override;
 
 	virtual void light_directional_set_shadow_mode(RID p_light, RS::LightDirectionalShadowMode p_mode) override;
@@ -590,6 +596,27 @@ public:
 		return light->reverse_cull;
 	}
 
+	virtual RID light_get_shadow_source(RID p_light) const override {
+		const Light *light = light_owner.get_or_null(p_light);
+		ERR_FAIL_NULL_V(light, RID());
+
+		return light->shadow_source;
+	}
+
+	virtual void light_set_clear_frame(RID p_light, int p_pass, uint64_t p_clear_frame) {
+		Light *light = light_owner.get_or_null(p_light);
+		ERR_FAIL_NULL(light);
+
+		light->clear_frame[p_pass] = p_clear_frame;
+	}
+
+	virtual uint64_t light_get_clear_frame(RID p_light, int p_pass) const {
+		const Light *light = light_owner.get_or_null(p_light);
+		ERR_FAIL_NULL_V(light, 0);
+
+		return light->clear_frame[p_pass];
+	}
+
 	virtual RS::LightBakeMode light_get_bake_mode(RID p_light) override;
 	virtual uint32_t light_get_max_sdfgi_cascade(RID p_light) override;
 	virtual uint64_t light_get_version(RID p_light) const override;
@@ -606,6 +633,11 @@ public:
 	virtual void light_instance_set_transform(RID p_light_instance, const Transform3D &p_transform) override;
 	virtual void light_instance_set_aabb(RID p_light_instance, const AABB &p_aabb) override;
 	virtual void light_instance_set_shadow_transform(RID p_light_instance, const Projection &p_projection, const Transform3D &p_transform, float p_far, float p_split, int p_pass, float p_shadow_texel_size, float p_bias_scale = 1.0, float p_range_begin = 0, const Vector2 &p_uv_scale = Vector2()) override;
+	virtual void light_instance_set_shadow_source(RID p_light_instance, RID p_shadow_source) override;
+	virtual RID light_instance_get_shadow_source(RID p_light_instance) const override {
+		const LightInstance *li = light_instance_owner.get_or_null(p_light_instance);
+		return li->shadow_source;
+	}
 	virtual void light_instance_mark_visible(RID p_light_instance) override;
 
 	virtual bool light_instance_is_shadow_visible_at_position(RID p_light_instance, const Vector3 &p_position) const override {
@@ -779,6 +811,17 @@ public:
 		LightInstance *li = light_instance_owner.get_or_null(p_light_instance);
 		return li->last_scene_shadow_pass;
 	}
+
+	// HACK: TI - shadow_render pass
+	_FORCE_INLINE_ void light_instance_set_shadow_render_pass(RID p_light_instance, int p_pass, uint64_t p_frame) {
+		LightInstance *li = light_instance_owner.get_or_null(p_light_instance);
+		li->last_scene_shadow_render_pass[p_pass] = p_frame;
+	}
+	_FORCE_INLINE_ uint64_t light_instance_get_shadow_render_pass(RID p_light_instance, int p_pass) {
+		LightInstance *li = light_instance_owner.get_or_null(p_light_instance);
+		return li->last_scene_shadow_render_pass[p_pass];
+	}
+
 
 	_FORCE_INLINE_ ForwardID light_instance_get_forward_id(RID p_light_instance) {
 		LightInstance *li = light_instance_owner.get_or_null(p_light_instance);

@@ -273,6 +273,12 @@ Color Light3D::get_correlated_color() const {
 	return correlated_color;
 }
 
+void Light3D::set_shadow_source(Light3D *p_light_source) {
+	shadow_source = p_light_source->light;
+
+	RS::get_singleton()->light_set_shadow_source(light, shadow_source);
+}
+
 float Light3D::get_temperature() const {
 	return temperature;
 }
@@ -379,6 +385,8 @@ void Light3D::_bind_methods() {
 
 	ClassDB::bind_method(D_METHOD("set_shadow_caster_mask", "caster_mask"), &Light3D::set_shadow_caster_mask);
 	ClassDB::bind_method(D_METHOD("get_shadow_caster_mask"), &Light3D::get_shadow_caster_mask);
+
+	ClassDB::bind_method(D_METHOD("set_shadow_source", "source"), &Light3D::set_shadow_source);
 
 	ClassDB::bind_method(D_METHOD("set_bake_mode", "bake_mode"), &Light3D::set_bake_mode);
 	ClassDB::bind_method(D_METHOD("get_bake_mode"), &Light3D::get_bake_mode);

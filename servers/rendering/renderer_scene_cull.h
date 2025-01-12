@@ -61,7 +61,7 @@ public:
 		SDFGI_MAX_CASCADES = 8,
 		SDFGI_MAX_REGIONS_PER_CASCADE = 3,
 		MAX_INSTANCE_PAIRS = 32,
-		MAX_UPDATE_SHADOWS = 512
+		MAX_UPDATE_SHADOWS = 512,
 	};
 
 	uint64_t render_pass;
@@ -92,6 +92,10 @@ public:
 		RID attributes;
 		RID compositor;
 
+		// HACK: TI - Camera scissor
+		bool use_scissor;
+		Rect2i scissor_rect;
+
 		Transform3D transform;
 
 		Camera() {
@@ -110,6 +114,12 @@ public:
 
 	virtual RID camera_allocate();
 	virtual void camera_initialize(RID p_rid);
+
+	// HACK: TI - scissor rect stuff
+	virtual void camera_set_use_scissor(RID p_camera, bool p_use_scissor) override;
+	virtual void camera_set_scissor_rect(RID p_camera, Rect2i p_scissor_rect) override;
+	virtual bool camera_get_use_scissor(RID p_camera) const override;
+	virtual Rect2i camera_get_scissor_rect(RID p_camera) const override;
 
 	virtual void camera_set_perspective(RID p_camera, float p_fovy_degrees, float p_z_near, float p_z_far);
 	virtual void camera_set_orthogonal(RID p_camera, float p_size, float p_z_near, float p_z_far);
@@ -1025,7 +1035,9 @@ public:
 		}
 	};
 
-	InstanceCullResult scene_cull_result;
+	LocalVector<InstanceCullResult*> scene_cull_result_buffer;
+	Vector<uint64_t> scene_cull_result_queue;
+
 	LocalVector<InstanceCullResult> scene_cull_result_threads;
 
 	RendererSceneRender::RenderShadowData render_shadow_data[MAX_UPDATE_SHADOWS];
@@ -1241,6 +1253,7 @@ public:
 
 	// Background
 	PASS2(environment_set_background, RID, RS::EnvironmentBG)
+	PASS2(environment_set_depth_mode, RID, RS::EnvironmentDepthMode)
 	PASS2(environment_set_sky, RID, RID)
 	PASS2(environment_set_sky_custom_fov, RID, float)
 	PASS2(environment_set_sky_orientation, RID, const Basis &)
