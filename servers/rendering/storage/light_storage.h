@@ -65,6 +65,7 @@ public:
 	virtual void light_set_max_sdfgi_cascade(RID p_light, uint32_t p_cascade) = 0;
 	virtual void light_set_shadow_source(RID p_light, RID p_shadow_source) = 0;
 	virtual void light_set_clear_frame(RID p_light, int p_pass, uint64_t p_clear_frame) = 0;
+	virtual void light_set_compositor(RID p_light, RID p_compositor) = 0;
 
 	virtual void light_omni_set_shadow_mode(RID p_light, RS::LightOmniShadowMode p_mode) = 0;
 
@@ -92,6 +93,7 @@ public:
 	virtual uint32_t light_get_cull_mask(RID p_light) const = 0;
 	virtual RID light_get_shadow_source(RID p_light) const = 0;
 	virtual uint64_t light_get_clear_frame(RID p_light, int p_pass) const = 0;
+	virtual RID light_get_compositor(RID p_light) const = 0;
 
 	/* LIGHT INSTANCE API */
 

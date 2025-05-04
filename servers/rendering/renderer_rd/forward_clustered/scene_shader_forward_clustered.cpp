@@ -793,6 +793,9 @@ void SceneShaderForwardClustered::init(const String p_defines) {
 		actions.usage_defines["LIGHT_MASK"] = "#define LIGHT_MASK_USED\n";
 		actions.renames["LIGHT_VISIBLE_LAYERS"] = "light_visible_layers";
 		actions.usage_defines["LIGHT_VISIBLE_LAYERS"] = "#define LIGHT_VISIBLE_LAYERS_USED\n";
+		// NOTE: TI - Expose gl_ClipDistance
+		actions.renames["CLIP_DISTANCE"] = "gl_ClipDistance[0]";
+		actions.usage_defines["CLIP_DISTANCE"] = "#define USE_CLIP_DISTANCE\n";
 
 		actions.usage_defines["NORMAL"] = "#define NORMAL_USED\n";
 		actions.usage_defines["TANGENT"] = "#define TANGENT_USED\n";

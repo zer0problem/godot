@@ -101,4 +101,19 @@ public:
 	uint32_t voxel_gi_count = 0;
 };
 
+// HACK: TI - move this somewhere else
+class RenderDataRDShadow : public RenderDataRD {
+	GDCLASS(RenderDataRDShadow, RenderDataRD);
+
+protected:
+	static void _bind_methods();
+
+public:
+	RID get_shadow_depth() const {
+		return shadow_depth;
+	}
+
+	RID shadow_depth = RID();
+};
+
 #endif // RENDER_DATA_RD_H

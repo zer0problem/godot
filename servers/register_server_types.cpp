@@ -229,6 +229,7 @@ void register_server_types() {
 	GDREGISTER_ABSTRACT_CLASS(RenderData);
 	GDREGISTER_CLASS(RenderDataExtension);
 	GDREGISTER_CLASS(RenderDataRD);
+	GDREGISTER_CLASS(RenderDataRDShadow);
 
 	GDREGISTER_ABSTRACT_CLASS(RenderSceneData);
 	GDREGISTER_CLASS(RenderSceneDataExtension);

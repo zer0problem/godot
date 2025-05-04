@@ -279,6 +279,19 @@ void Light3D::set_shadow_source(Light3D *p_light_source) {
 	RS::get_singleton()->light_set_shadow_source(light, shadow_source);
 }
 
+void Light3D::set_compositor(const Ref<Compositor> &p_compositor) {
+	compositor = p_compositor;
+	if (compositor.is_valid()) {
+		RS::get_singleton()->light_set_compositor(light, compositor->get_rid());
+	} else {
+		RS::get_singleton()->light_set_compositor(light, RID());
+	}
+}
+
+Ref<Compositor> Light3D::get_compositor() const {
+	return compositor;
+}
+
 float Light3D::get_temperature() const {
 	return temperature;
 }
@@ -387,6 +400,9 @@ void Light3D::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_shadow_caster_mask"), &Light3D::get_shadow_caster_mask);
 
 	ClassDB::bind_method(D_METHOD("set_shadow_source", "source"), &Light3D::set_shadow_source);
+
+	ClassDB::bind_method(D_METHOD("set_compositor", "compositor"), &Light3D::set_compositor);
+	ClassDB::bind_method(D_METHOD("get_compositor"), &Light3D::get_compositor);
 
 	ClassDB::bind_method(D_METHOD("set_bake_mode", "bake_mode"), &Light3D::set_bake_mode);
 	ClassDB::bind_method(D_METHOD("get_bake_mode"), &Light3D::get_bake_mode);

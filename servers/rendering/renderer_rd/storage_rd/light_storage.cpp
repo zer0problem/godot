@@ -338,6 +338,16 @@ void RendererRD::LightStorage::light_set_shadow_source(RID p_light, RID p_shadow
 	light->dependency.changed_notify(Dependency::DEPENDENCY_CHANGED_LIGHT);
 }
 
+void RendererRD::LightStorage::light_set_compositor(RID p_light, RID p_compositor) {
+	Light *light = light_owner.get_or_null(p_light);
+	ERR_FAIL_NULL(light);
+
+	light->compositor = p_compositor;
+
+	light->version++;
+	light->dependency.changed_notify(Dependency::DEPENDENCY_CHANGED_LIGHT);
+}
+
 void LightStorage::light_omni_set_shadow_mode(RID p_light, RS::LightOmniShadowMode p_mode) {
 	Light *light = light_owner.get_or_null(p_light);
 	ERR_FAIL_NULL(light);

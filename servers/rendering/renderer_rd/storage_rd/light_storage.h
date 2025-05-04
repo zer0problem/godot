@@ -82,6 +82,7 @@ private:
 		bool directional_blend_splits = false;
 		RS::LightDirectionalSkyMode directional_sky_mode = RS::LIGHT_DIRECTIONAL_SKY_MODE_LIGHT_AND_SKY;
 		RID shadow_source = RID();
+		RID compositor = RID();
 		uint64_t clear_frame[6] = { 0 };
 		uint64_t coverage_per_frame[2] = { 0 };
 		uint64_t version = 0;
@@ -501,6 +502,7 @@ public:
 	virtual void light_set_bake_mode(RID p_light, RS::LightBakeMode p_bake_mode) override;
 	virtual void light_set_max_sdfgi_cascade(RID p_light, uint32_t p_cascade) override;
 	virtual void light_set_shadow_source(RID p_light, RID p_shadow_source) override;
+	virtual void light_set_compositor(RID p_light, RID p_compositor) override;
 	virtual void light_omni_set_shadow_mode(RID p_light, RS::LightOmniShadowMode p_mode) override;
 
 	virtual void light_directional_set_shadow_mode(RID p_light, RS::LightDirectionalShadowMode p_mode) override;
@@ -603,18 +605,25 @@ public:
 		return light->shadow_source;
 	}
 
-	virtual void light_set_clear_frame(RID p_light, int p_pass, uint64_t p_clear_frame) {
+	virtual void light_set_clear_frame(RID p_light, int p_pass, uint64_t p_clear_frame) override {
 		Light *light = light_owner.get_or_null(p_light);
 		ERR_FAIL_NULL(light);
 
 		light->clear_frame[p_pass] = p_clear_frame;
 	}
 
-	virtual uint64_t light_get_clear_frame(RID p_light, int p_pass) const {
+	virtual uint64_t light_get_clear_frame(RID p_light, int p_pass) const override {
 		const Light *light = light_owner.get_or_null(p_light);
 		ERR_FAIL_NULL_V(light, 0);
 
 		return light->clear_frame[p_pass];
+	}
+
+	virtual RID light_get_compositor(RID p_light) const override {
+		const Light *light = light_owner.get_or_null(p_light);
+		ERR_FAIL_NULL_V(light, RID());
+
+		return light->compositor;
 	}
 
 	virtual RS::LightBakeMode light_get_bake_mode(RID p_light) override;

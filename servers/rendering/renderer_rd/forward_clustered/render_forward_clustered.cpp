@@ -2693,7 +2693,7 @@ void RenderForwardClustered::_render_shadow_pass(RID p_light, RID p_shadow_atlas
 		}
 	}
 
-	// HACK: TI - Only clear if it's not the shadow source
+	// HACK: TI - Only clear if it's the first with this shadow source
 	bool should_clear = false;
 
 	const uint64_t frame_number = RSG::rasterizer->get_frame_number();
@@ -2704,6 +2704,24 @@ void RenderForwardClustered::_render_shadow_pass(RID p_light, RID p_shadow_atlas
 			light_storage->light_set_clear_frame(shadow_source, p_pass, frame_number);
 			should_clear = true;
 		}
+	}
+
+	// HACK: TI - apply compositor pre-depth to shadows
+	RID compositor = light_storage->light_get_compositor(base);
+	if (compositor.is_valid()) {
+		// TI - Ponder if perhaps I need to clear manually here
+
+		RenderSceneDataRD render_scene_data;
+		render_scene_data.use_scissor = true;
+		render_scene_data.scissor_rect = atlas_rect;
+		render_scene_data.cam_projection = light_projection;
+		render_scene_data.cam_transform = light_transform;
+
+		RenderDataRDShadow render_data;
+		render_data.compositor = compositor;
+		render_data.scene_data = &render_scene_data;
+		render_data.shadow_depth = render_fb;
+		_process_compositor_effects(RS::COMPOSITOR_EFFECT_CALLBACK_TYPE_PRE_DEPTH, &render_data);
 	}
 
 	if (render_cubemap) {
@@ -2731,6 +2749,21 @@ void RenderForwardClustered::_render_shadow_pass(RID p_light, RID p_shadow_atlas
 
 		//render shadow
 		_render_shadow_append(render_fb, p_instances, light_projection, light_transform, zfar, 0, 0, reverse_cull_face, using_dual_paraboloid, using_dual_paraboloid_flip, use_pancake, p_lod_distance_multiplier, p_screen_mesh_lod_threshold, atlas_rect, flip_y, p_clear_region, p_open_pass, p_close_pass, p_render_info, p_viewport_size, p_main_cam_transform, cull_mask);
+	}
+
+	// HACK: TI - apply compositor post-depth (AKA pre-opaque) to shadows
+	if (compositor.is_valid()) {
+		RenderSceneDataRD render_scene_data;
+		render_scene_data.use_scissor = true;
+		render_scene_data.scissor_rect = atlas_rect;
+		render_scene_data.cam_projection = light_projection;
+		render_scene_data.cam_transform = light_transform;
+
+		RenderDataRDShadow render_data;
+		render_data.compositor = compositor;
+		render_data.scene_data = &render_scene_data;
+		render_data.shadow_depth = render_fb;
+		_process_compositor_effects(RS::COMPOSITOR_EFFECT_CALLBACK_TYPE_PRE_OPAQUE, &render_data);
 	}
 }
 

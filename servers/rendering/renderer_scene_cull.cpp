@@ -3411,6 +3411,26 @@ void RendererSceneCull::_render_scene(const RendererSceneRender::CameraData *p_c
 			}
 		}
 
+		// HACK: TI - Sort lights based on some value
+		{
+			// No easily accessible sort function available, just doing bubble sort
+			bool sorted = false;
+			while (!sorted && scene_cull_result.lights.size() > 1) {
+				sorted = true;
+				for (uint32_t i = 0; i < scene_cull_result.lights.size() - 1; ++i) {
+					const RendererSceneCull::Instance *a = scene_cull_result.lights[i];
+					const RendererSceneCull::Instance *b = scene_cull_result.lights[i + 1];
+					const uint32_t a_cull_mask = RSG::light_storage->light_get_cull_mask(a->base);
+					const uint32_t b_cull_mask = RSG::light_storage->light_get_cull_mask(b->base);
+					if (a_cull_mask > b_cull_mask)
+					{
+						std::swap(scene_cull_result.lights[i], scene_cull_result.lights[i + 1]);
+						sorted = false;
+					}
+				}
+			}
+		}
+
 		// HACK: TI - Assign light instance shadow source values
 		{
 			HashMap<RID, RID> light_base_to_instance;

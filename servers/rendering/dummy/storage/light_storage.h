@@ -81,6 +81,7 @@ public:
 	virtual void light_set_shadow_caster_mask(RID p_light, uint32_t p_caster_mask) override {}
 	virtual uint32_t light_get_shadow_caster_mask(RID p_light) const override { return 0xFFFFFFFF; }
 	virtual void light_set_shadow_source(RID p_light, RID p_shadow_source) override {}
+	virtual void light_set_compositor(RID p_light, RID p_compositor) override {}
 	virtual void light_set_bake_mode(RID p_light, RS::LightBakeMode p_bake_mode) override {}
 	virtual void light_set_max_sdfgi_cascade(RID p_light, uint32_t p_cascade) override {}
 
@@ -108,6 +109,7 @@ public:
 	virtual uint64_t light_get_version(RID p_light) const override { return 0; }
 	virtual uint32_t light_get_cull_mask(RID p_light) const override { return 0; }
 	virtual RID light_get_shadow_source(RID p_light) const override { return RID(); }
+	virtual RID light_get_compositor(RID p_light) const override { return RID(); }
 
 	virtual void light_set_clear_frame(RID p_light, int p_pass, uint64_t p_clear_frame) {}
 	virtual uint64_t light_get_clear_frame(RID p_light, int p_pass) const { return 0; }

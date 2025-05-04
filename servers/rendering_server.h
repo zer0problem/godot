@@ -548,6 +548,7 @@ public:
 	virtual void light_set_reverse_cull_face_mode(RID p_light, bool p_enabled) = 0;
 	virtual void light_set_shadow_caster_mask(RID p_light, uint32_t p_caster_mask) = 0;
 	virtual void light_set_shadow_source(RID p_light, RID p_shadow_source) = 0;
+	virtual void light_set_compositor(RID p_light, RID p_compositor) = 0;
 
 	enum LightBakeMode {
 		LIGHT_BAKE_DISABLED,

@@ -446,6 +446,7 @@ public:
 	FUNC2(light_set_reverse_cull_face_mode, RID, bool)
 	FUNC2(light_set_shadow_caster_mask, RID, uint32_t)
 	FUNC2(light_set_shadow_source, RID, RID)
+	FUNC2(light_set_compositor, RID, RID)
 	FUNC2(light_set_bake_mode, RID, LightBakeMode)
 	FUNC2(light_set_max_sdfgi_cascade, RID, uint32_t)
 

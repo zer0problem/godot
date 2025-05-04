@@ -53,3 +53,10 @@ int RenderDataRD::get_stencil_reference() const {
 void RenderDataRD::set_stencil_reference(int p_stencil_reference) {
 	stencil_reference = p_stencil_reference;
 }
+
+// HACK: TI - move this somewhere else
+void RenderDataRDShadow::_bind_methods() {
+	RenderData::_bind_methods();
+
+	ClassDB::bind_method(D_METHOD("get_shadow_depth"), &RenderDataRDShadow::get_shadow_depth);
+}

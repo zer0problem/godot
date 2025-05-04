@@ -88,6 +88,7 @@ private:
 	Color correlated_color = Color(1.0, 1.0, 1.0);
 	float temperature = 6500.0;
 	RID shadow_source = RID();
+	Ref<Compositor> compositor;
 
 	// bind helpers
 
@@ -152,6 +153,9 @@ public:
 	Color get_correlated_color() const;
 
 	void set_shadow_source(Light3D *p_light_source);
+
+	void set_compositor(const Ref<Compositor> &p_compositor);
+	Ref<Compositor> get_compositor() const;
 
 	virtual AABB get_aabb() const override;
 	virtual PackedStringArray get_configuration_warnings() const override;

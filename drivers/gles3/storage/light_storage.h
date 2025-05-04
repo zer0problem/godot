@@ -431,8 +431,11 @@ public:
 		ERR_FAIL_V(RID());
 	}
 
-	virtual void light_set_clear_frame(RID p_light, int p_pass, uint64_t p_clear_frame) {}
-	virtual uint64_t light_get_clear_frame(RID p_light, int p_pass) const { return 0; }
+	virtual void light_set_clear_frame(RID p_light, int p_pass, uint64_t p_clear_frame) override {}
+	virtual uint64_t light_get_clear_frame(RID p_light, int p_pass) const override { return 0; }
+
+	virtual void light_set_compositor(RID p_light, RID p_compositor) override {}
+	virtual RID light_get_compositor(RID p_light) const override { return RID(); }
 
 	virtual RS::LightBakeMode light_get_bake_mode(RID p_light) override;
 	virtual uint32_t light_get_max_sdfgi_cascade(RID p_light) override { return 0; }
