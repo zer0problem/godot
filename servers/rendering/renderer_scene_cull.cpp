@@ -3694,6 +3694,14 @@ void RendererSceneCull::_render_scene(const RendererSceneRender::CameraData *p_c
 	for (uint32_t i = 0; i < cull.sdfgi.region_count; i++) {
 		render_sdfgi_data[i].instances.clear();
 	}
+
+	// TI - giving the buffer back to the queue
+	for (uint32_t i = 0; i < scene_cull_result_buffer.size(); ++i) {
+		if (scene_cull_result_buffer[i] == &scene_cull_result)
+		{
+			scene_cull_result_queue.append(i);
+		}
+	}
 }
 
 RID RendererSceneCull::_render_get_environment(RID p_camera, RID p_scenario) {
@@ -4621,12 +4629,4 @@ RendererSceneCull::~RendererSceneCull() {
 		memdelete(light_culler);
 		light_culler = nullptr;
 	}
-}
-
-void RendererSceneCull::clear() {
-	for (InstanceCullResult *buffer : scene_cull_result_buffer) {
-		buffer->reset();
-		delete buffer;
-	}
-	scene_cull_result_buffer.clear();
 }

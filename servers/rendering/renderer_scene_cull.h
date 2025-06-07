@@ -1462,8 +1462,6 @@ public:
 
 	RendererSceneCull();
 	virtual ~RendererSceneCull();
-
-	virtual void clear() override;
 };
 
 #endif // RENDERER_SCENE_CULL_H

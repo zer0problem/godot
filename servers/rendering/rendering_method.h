@@ -381,9 +381,6 @@ public:
 
 	RenderingMethod();
 	virtual ~RenderingMethod();
-
-	// HACK: TI - fix memory leak?
-	virtual void clear() = 0;
 };
 
 #endif // RENDERING_METHOD_H
