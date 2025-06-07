@@ -264,6 +264,7 @@ void RendererViewport::_draw_3d(Viewport *p_viewport) {
 
 	float screen_mesh_lod_threshold = p_viewport->mesh_lod_threshold / float(p_viewport->size.width);
 	RSG::scene->render_camera(p_viewport->render_buffers, p_viewport->camera, p_viewport->scenario, p_viewport->self, p_viewport->internal_size, p_viewport->jitter_phase_count, screen_mesh_lod_threshold, p_viewport->shadow_atlas, xr_interface, &p_viewport->render_info);
+	RSG::scene->clear();
 
 	RENDER_TIMESTAMP("< Render 3D Scene");
 #endif // _3D_DISABLED
@@ -1011,6 +1012,13 @@ void RendererViewport::viewport_set_size(RID p_viewport, int p_width, int p_heig
 	ERR_FAIL_COND_MSG(viewport->use_xr, "Cannot set viewport size when using XR");
 
 	_viewport_set_size(viewport, p_width, p_height, 1);
+}
+
+Vector2i RendererViewport::viewport_get_size(RID p_viewport) const {
+	Viewport *viewport = viewport_owner.get_or_null(p_viewport);
+	ERR_FAIL_COND_V(!viewport, Vector2i());
+
+	return viewport->size;
 }
 
 void RendererViewport::_viewport_set_size(Viewport *p_viewport, int p_width, int p_height, uint32_t p_view_count) {

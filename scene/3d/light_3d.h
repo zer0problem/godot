@@ -160,6 +160,9 @@ public:
 	virtual AABB get_aabb() const override;
 	virtual PackedStringArray get_configuration_warnings() const override;
 
+	// HACK: TI - Custom culling planes
+	void set_custom_culling_planes(const PackedVector4Array& p_planes);
+
 	Light3D();
 	~Light3D();
 };

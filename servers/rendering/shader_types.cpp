@@ -111,7 +111,12 @@ ShaderTypes::ShaderTypes() {
 	shader_modes[RS::SHADER_SPATIAL].functions["vertex"].built_ins["EYE_OFFSET"] = constt(ShaderLanguage::TYPE_VEC3);
 
 	// NOTE: TI - Expose gl_ClipDistance
-	shader_modes[RS::SHADER_SPATIAL].functions["vertex"].built_ins["CLIP_DISTANCE"] = ShaderLanguage::TYPE_FLOAT;
+	shader_modes[RS::SHADER_SPATIAL].functions["vertex"].built_ins["CLIP_DISTANCE0"] = ShaderLanguage::TYPE_FLOAT;
+	shader_modes[RS::SHADER_SPATIAL].functions["vertex"].built_ins["CLIP_DISTANCE1"] = ShaderLanguage::TYPE_FLOAT;
+	shader_modes[RS::SHADER_SPATIAL].functions["vertex"].built_ins["CLIP_DISTANCE2"] = ShaderLanguage::TYPE_FLOAT;
+	shader_modes[RS::SHADER_SPATIAL].functions["vertex"].built_ins["CLIP_DISTANCE3"] = ShaderLanguage::TYPE_FLOAT;
+	shader_modes[RS::SHADER_SPATIAL].functions["vertex"].built_ins["CLIP_DISTANCE4"] = ShaderLanguage::TYPE_FLOAT;
+	shader_modes[RS::SHADER_SPATIAL].functions["vertex"].built_ins["CLIP_DISTANCE5"] = ShaderLanguage::TYPE_FLOAT;
 
 	shader_modes[RS::SHADER_SPATIAL].functions["fragment"].built_ins["VERTEX"] = constt(ShaderLanguage::TYPE_VEC3);
 	shader_modes[RS::SHADER_SPATIAL].functions["fragment"].built_ins["LIGHT_VERTEX"] = ShaderLanguage::TYPE_VEC3;

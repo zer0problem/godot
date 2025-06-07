@@ -95,6 +95,10 @@ public:
 	virtual uint64_t light_get_clear_frame(RID p_light, int p_pass) const = 0;
 	virtual RID light_get_compositor(RID p_light) const = 0;
 
+	// HACK: TI - Custom culling planes
+	virtual Vector<Plane> light_get_custom_culling_planes(RID p_light) const = 0;
+	virtual void light_set_custom_culling_planes(RID p_light, const Vector<Plane> &p_planes) = 0;
+
 	/* LIGHT INSTANCE API */
 
 	virtual RID light_instance_create(RID p_light) = 0;

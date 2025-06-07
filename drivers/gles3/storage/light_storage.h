@@ -442,6 +442,10 @@ public:
 	virtual uint64_t light_get_version(RID p_light) const override;
 	virtual uint32_t light_get_cull_mask(RID p_light) const override;
 
+	// HACK: TI - Custom culling planes
+	virtual Vector<Plane> light_get_custom_culling_planes(RID p_light) const override { return Vector<Plane>(); }
+	virtual void light_set_custom_culling_planes(RID p_light, const Vector<Plane> &p_planes) override {}
+
 	/* LIGHT INSTANCE API */
 
 	LightInstance *get_light_instance(RID p_rid) { return light_instance_owner.get_or_null(p_rid); }

@@ -2706,27 +2706,9 @@ void RenderForwardClustered::_render_shadow_pass(RID p_light, RID p_shadow_atlas
 		}
 	}
 
-	// HACK: TI - apply compositor pre-depth to shadows
-	RID compositor = light_storage->light_get_compositor(base);
-	if (compositor.is_valid()) {
-		// TI - Ponder if perhaps I need to clear manually here
-
-		RenderSceneDataRD render_scene_data;
-		render_scene_data.use_scissor = true;
-		render_scene_data.scissor_rect = atlas_rect;
-		render_scene_data.cam_projection = light_projection;
-		render_scene_data.cam_transform = light_transform;
-
-		RenderDataRDShadow render_data;
-		render_data.compositor = compositor;
-		render_data.scene_data = &render_scene_data;
-		render_data.shadow_depth = render_fb;
-		_process_compositor_effects(RS::COMPOSITOR_EFFECT_CALLBACK_TYPE_PRE_DEPTH, &render_data);
-	}
-
 	if (render_cubemap) {
 		//rendering to cubemap
-		_render_shadow_append(render_fb, p_instances, light_projection, light_transform, zfar, 0, 0, reverse_cull_face, false, false, use_pancake, p_lod_distance_multiplier, p_screen_mesh_lod_threshold, Rect2(), false, true, true, true, p_render_info, p_viewport_size, p_main_cam_transform, cull_mask);
+		_render_shadow_append(render_fb, p_instances, light_projection, light_transform, zfar, 0, 0, reverse_cull_face, false, false, use_pancake, p_lod_distance_multiplier, p_screen_mesh_lod_threshold, Rect2(), false, true, true, true, p_render_info, p_viewport_size, p_main_cam_transform, cull_mask, base);
 		if (finalize_cubemap) {
 			_render_shadow_process();
 			_render_shadow_end();
@@ -2748,22 +2730,7 @@ void RenderForwardClustered::_render_shadow_pass(RID p_light, RID p_shadow_atlas
 		p_close_pass = p_close_pass && should_clear;
 
 		//render shadow
-		_render_shadow_append(render_fb, p_instances, light_projection, light_transform, zfar, 0, 0, reverse_cull_face, using_dual_paraboloid, using_dual_paraboloid_flip, use_pancake, p_lod_distance_multiplier, p_screen_mesh_lod_threshold, atlas_rect, flip_y, p_clear_region, p_open_pass, p_close_pass, p_render_info, p_viewport_size, p_main_cam_transform, cull_mask);
-	}
-
-	// HACK: TI - apply compositor post-depth (AKA pre-opaque) to shadows
-	if (compositor.is_valid()) {
-		RenderSceneDataRD render_scene_data;
-		render_scene_data.use_scissor = true;
-		render_scene_data.scissor_rect = atlas_rect;
-		render_scene_data.cam_projection = light_projection;
-		render_scene_data.cam_transform = light_transform;
-
-		RenderDataRDShadow render_data;
-		render_data.compositor = compositor;
-		render_data.scene_data = &render_scene_data;
-		render_data.shadow_depth = render_fb;
-		_process_compositor_effects(RS::COMPOSITOR_EFFECT_CALLBACK_TYPE_PRE_OPAQUE, &render_data);
+		_render_shadow_append(render_fb, p_instances, light_projection, light_transform, zfar, 0, 0, reverse_cull_face, using_dual_paraboloid, using_dual_paraboloid_flip, use_pancake, p_lod_distance_multiplier, p_screen_mesh_lod_threshold, atlas_rect, flip_y, p_clear_region, p_open_pass, p_close_pass, p_render_info, p_viewport_size, p_main_cam_transform, cull_mask, base);
 	}
 }
 
@@ -2776,10 +2743,13 @@ void RenderForwardClustered::_render_shadow_begin() {
 	scene_state.instance_data[RENDER_LIST_SECONDARY].clear();
 }
 
-void RenderForwardClustered::_render_shadow_append(RID p_framebuffer, const PagedArray<RenderGeometryInstance *> &p_instances, const Projection &p_projection, const Transform3D &p_transform, float p_zfar, float p_bias, float p_normal_bias, bool p_reverse_cull_face, bool p_use_dp, bool p_use_dp_flip, bool p_use_pancake, float p_lod_distance_multiplier, float p_screen_mesh_lod_threshold, const Rect2i &p_rect, bool p_flip_y, bool p_clear_region, bool p_begin, bool p_end, RenderingMethod::RenderInfo *p_render_info, const Size2i &p_viewport_size, const Transform3D &p_main_cam_transform, uint32_t p_cull_mask) {
+void RenderForwardClustered::_render_shadow_append(RID p_framebuffer, const PagedArray<RenderGeometryInstance *> &p_instances, const Projection &p_projection, const Transform3D &p_transform, float p_zfar, float p_bias, float p_normal_bias, bool p_reverse_cull_face, bool p_use_dp, bool p_use_dp_flip, bool p_use_pancake, float p_lod_distance_multiplier, float p_screen_mesh_lod_threshold, const Rect2i &p_rect, bool p_flip_y, bool p_clear_region, bool p_begin, bool p_end, RenderingMethod::RenderInfo *p_render_info, const Size2i &p_viewport_size, const Transform3D &p_main_cam_transform, uint32_t p_cull_mask, RID p_base_light) {
 	uint32_t shadow_pass_index = scene_state.shadow_passes.size();
 
 	SceneState::ShadowPass shadow_pass;
+	shadow_pass.base_light = p_base_light;
+	shadow_pass.transform = p_transform;
+	shadow_pass.projection = p_projection;
 
 	RenderSceneDataRD scene_data;
 	scene_data.flip_y = !p_flip_y; // Q: Why is this inverted? Do we assume flip in shadow logic?
@@ -2861,10 +2831,41 @@ void RenderForwardClustered::_render_shadow_process() {
 }
 void RenderForwardClustered::_render_shadow_end() {
 	RD::get_singleton()->draw_command_begin_label("Shadow Render");
+	RendererRD::LightStorage *light_storage = RendererRD::LightStorage::get_singleton();
 
 	for (SceneState::ShadowPass &shadow_pass : scene_state.shadow_passes) {
+		// HACK: TI - apply compositor pre-depth to shadows
+		RID compositor = light_storage->light_get_compositor(shadow_pass.base_light);
+		RenderSceneDataRD render_scene_data;
+		RenderDataRDShadow render_data;
+		uint32_t stencil_reference = 0;
+		if (compositor.is_valid()) {
+			// TI - Ponder if perhaps I need to clear manually here
+
+			render_scene_data.use_scissor = true;
+			render_scene_data.scissor_rect = shadow_pass.rect;
+			render_scene_data.cam_projection = shadow_pass.projection;
+			render_scene_data.cam_transform = shadow_pass.transform;
+
+			render_data.compositor = compositor;
+			render_data.scene_data = &render_scene_data;
+			render_data.shadow_depth = shadow_pass.framebuffer;
+			render_data.stencil_reference = 0;
+			render_data.clear_depth = shadow_pass.clear_depth;
+
+			_process_compositor_effects(RS::COMPOSITOR_EFFECT_CALLBACK_TYPE_PRE_DEPTH, &render_data);
+
+			stencil_reference = render_data.stencil_reference;
+			shadow_pass.clear_depth = render_data.clear_depth;
+		}
+
 		RenderListParameters render_list_parameters(render_list[RENDER_LIST_SECONDARY].elements.ptr() + shadow_pass.element_from, render_list[RENDER_LIST_SECONDARY].element_info.ptr() + shadow_pass.element_from, shadow_pass.element_count, shadow_pass.flip_cull, shadow_pass.pass_mode, 0, true, false, shadow_pass.rp_uniform_set, false, Vector2(), shadow_pass.lod_distance_multiplier, shadow_pass.screen_mesh_lod_threshold, 1, shadow_pass.element_from);
-		_render_list_with_draw_list(&render_list_parameters, shadow_pass.framebuffer, shadow_pass.clear_depth ? RD::DRAW_CLEAR_DEPTH : RD::DRAW_DEFAULT_ALL, Vector<Color>(), 0.0f, 0, shadow_pass.rect);
+		_render_list_with_draw_list(&render_list_parameters, shadow_pass.framebuffer, shadow_pass.clear_depth ? RD::DRAW_CLEAR_DEPTH : RD::DRAW_DEFAULT_ALL, Vector<Color>(), 0.0f, 0, shadow_pass.rect, stencil_reference);
+
+		// HACK: TI - apply compositor post-depth (AKA pre-opaque) to shadows
+		if (compositor.is_valid()) {
+			_process_compositor_effects(RS::COMPOSITOR_EFFECT_CALLBACK_TYPE_PRE_OPAQUE, &render_data);
+		}
 	}
 
 	RD::get_singleton()->draw_command_end_label();

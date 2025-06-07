@@ -52,6 +52,9 @@ public:
 	virtual void camera_set_scissor_rect(RID p_camera, Rect2i p_scissor_rect) = 0;
 	virtual bool camera_get_use_scissor(RID p_camera) const = 0;
 	virtual Rect2i camera_get_scissor_rect(RID p_camera) const = 0;
+	// HACK: TI - Culling plane stuff
+	virtual void camera_set_custom_culling_planes(RID p_camera, const Vector<Plane> &p_planes) = 0;
+	virtual Vector<Plane> camera_get_custom_culling_planes(RID p_camera) const = 0;
 
 	virtual void camera_set_perspective(RID p_camera, float p_fovy_degrees, float p_z_near, float p_z_far) = 0;
 	virtual void camera_set_orthogonal(RID p_camera, float p_size, float p_z_near, float p_z_far) = 0;
@@ -378,6 +381,9 @@ public:
 
 	RenderingMethod();
 	virtual ~RenderingMethod();
+
+	// HACK: TI - fix memory leak?
+	virtual void clear() = 0;
 };
 
 #endif // RENDERING_METHOD_H

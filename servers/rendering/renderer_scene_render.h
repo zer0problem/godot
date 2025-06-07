@@ -309,6 +309,9 @@ public:
 		bool use_scissor;
 		Rect2i scissor_rect;
 
+		// HACK: TI - Use custom culling planes
+		Vector<Plane> custom_culling_planes;
+
 		// Main/center projection
 		Transform3D main_transform;
 		Projection main_projection;

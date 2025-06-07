@@ -114,6 +114,10 @@ public:
 	virtual void light_set_clear_frame(RID p_light, int p_pass, uint64_t p_clear_frame) {}
 	virtual uint64_t light_get_clear_frame(RID p_light, int p_pass) const { return 0; }
 
+	// HACK: TI - Custom culling planes
+	virtual Vector<Plane> light_get_custom_culling_planes(RID p_light) const override { return Vector<Plane>(); }
+	virtual void light_set_custom_culling_planes(RID p_light, const Vector<Plane> &p_planes) override {}
+
 	/* LIGHT INSTANCE API */
 
 	RID light_instance_create(RID p_light) override { return RID(); }

@@ -33,6 +33,13 @@
 #include "servers/rendering/renderer_rd/storage_rd/light_storage.h"
 #include "servers/rendering/renderer_rd/storage_rd/texture_storage.h"
 
+void RenderSceneDataRD::_bind_methods() {
+	ClassDB::bind_method(D_METHOD("get_scissor_rect"), &RenderSceneDataRD::get_scissor_rect);
+	ClassDB::bind_method(D_METHOD("set_scissor_rect", "scissor_rect"), &RenderSceneDataRD::set_scissor_rect);
+	ClassDB::bind_method(D_METHOD("get_use_scissor"), &RenderSceneDataRD::get_use_scissor);
+	ClassDB::bind_method(D_METHOD("set_use_scissor", "use_scissor"), &RenderSceneDataRD::set_use_scissor);
+}
+
 Transform3D RenderSceneDataRD::get_cam_transform() const {
 	return cam_transform;
 }

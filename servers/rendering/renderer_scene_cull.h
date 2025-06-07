@@ -96,6 +96,9 @@ public:
 		bool use_scissor;
 		Rect2i scissor_rect;
 
+		// HACK: TI - Custom culling planes
+		Vector<Plane> custom_culling_planes;
+
 		Transform3D transform;
 
 		Camera() {
@@ -120,6 +123,9 @@ public:
 	virtual void camera_set_scissor_rect(RID p_camera, Rect2i p_scissor_rect) override;
 	virtual bool camera_get_use_scissor(RID p_camera) const override;
 	virtual Rect2i camera_get_scissor_rect(RID p_camera) const override;
+	// HACK: TI - culling plane stuff
+	virtual void camera_set_custom_culling_planes(RID p_camera, const Vector<Plane>& p_planes) override;
+	virtual Vector<Plane> camera_get_custom_culling_planes(RID p_camera) const override;
 
 	virtual void camera_set_perspective(RID p_camera, float p_fovy_degrees, float p_z_near, float p_z_far);
 	virtual void camera_set_orthogonal(RID p_camera, float p_size, float p_z_near, float p_z_far);
@@ -1456,6 +1462,8 @@ public:
 
 	RendererSceneCull();
 	virtual ~RendererSceneCull();
+
+	virtual void clear() override;
 };
 
 #endif // RENDERER_SCENE_CULL_H

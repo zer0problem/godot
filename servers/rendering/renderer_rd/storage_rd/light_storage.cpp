@@ -474,6 +474,20 @@ Dependency *LightStorage::light_get_dependency(RID p_light) const {
 	return &light->dependency;
 }
 
+Vector<Plane> RendererRD::LightStorage::light_get_custom_culling_planes(RID p_light) const {
+	Light *light = light_owner.get_or_null(p_light);
+	ERR_FAIL_NULL_V(light, {});
+
+	return light->culling_planes;
+}
+
+void RendererRD::LightStorage::light_set_custom_culling_planes(RID p_light, const Vector<Plane> &p_planes) {
+	Light *light = light_owner.get_or_null(p_light);
+	ERR_FAIL_NULL(light);
+
+	light->culling_planes = p_planes;
+}
+
 /* LIGHT INSTANCE API */
 
 RID LightStorage::light_instance_create(RID p_light) {
@@ -2537,7 +2551,9 @@ void LightStorage::shadow_atlas_update(RID p_atlas) {
 }
 
 RD::DataFormat LightStorage::get_shadow_atlas_depth_format(bool p_16_bits) {
-	return p_16_bits ? RD::DATA_FORMAT_D16_UNORM : RD::DATA_FORMAT_D32_SFLOAT;
+	// HACK: TI - I want stencils on the shadow atlas
+	return p_16_bits ? RD::DATA_FORMAT_D16_UNORM_S8_UINT : RD::DATA_FORMAT_D32_SFLOAT_S8_UINT;
+	//return p_16_bits ? RD::DATA_FORMAT_D16_UNORM : RD::DATA_FORMAT_D32_SFLOAT;
 }
 
 uint32_t LightStorage::get_shadow_atlas_depth_usage_bits() {

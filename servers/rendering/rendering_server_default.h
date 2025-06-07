@@ -450,6 +450,9 @@ public:
 	FUNC2(light_set_bake_mode, RID, LightBakeMode)
 	FUNC2(light_set_max_sdfgi_cascade, RID, uint32_t)
 
+	// HACK: TI - custom culling planes
+	FUNC2(light_set_custom_culling_planes, RID, const Vector<Plane>&)
+
 	FUNC2(light_omni_set_shadow_mode, RID, LightOmniShadowMode)
 
 	FUNC2(light_directional_set_shadow_mode, RID, LightDirectionalShadowMode)
@@ -668,6 +671,9 @@ public:
 	FUNC2(camera_set_scissor_rect, RID, Rect2i)
 	FUNC1RC(bool, camera_get_use_scissor, RID)
 	FUNC1RC(Rect2i, camera_get_scissor_rect, RID)
+	// HACK: TI - Culling plane stuff
+	FUNC2(camera_set_custom_culling_planes, RID, const Vector<Plane> &)
+	FUNC1RC(Vector<Plane>, camera_get_custom_culling_planes, RID)
 
 	/* OCCLUDER */
 	FUNCRIDSPLIT(occluder)

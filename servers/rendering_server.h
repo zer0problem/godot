@@ -559,6 +559,9 @@ public:
 	virtual void light_set_bake_mode(RID p_light, LightBakeMode p_bake_mode) = 0;
 	virtual void light_set_max_sdfgi_cascade(RID p_light, uint32_t p_cascade) = 0;
 
+	// HACK: TI - Custom culling planes
+	virtual void light_set_custom_culling_planes(RID p_light, const Vector<Plane>& p_planes) = 0;
+
 	// Omni light
 	enum LightOmniShadowMode {
 		LIGHT_OMNI_SHADOW_DUAL_PARABOLOID,
@@ -898,6 +901,9 @@ public:
 	virtual void camera_set_scissor_rect(RID p_camera, Rect2i p_scissor_rect) = 0;
 	virtual bool camera_get_use_scissor(RID p_camera) const = 0;
 	virtual Rect2i camera_get_scissor_rect(RID p_camera) const = 0;
+	// HACK: TI - Camera culling planes
+	virtual void camera_set_custom_culling_planes(RID p_camera, const Vector<Plane> &p_planes) = 0;
+	virtual Vector<Plane> camera_get_custom_culling_planes(RID p_camera) const = 0;
 
 	/* VIEWPORT API */
 

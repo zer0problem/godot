@@ -112,8 +112,15 @@ public:
 	RID get_shadow_depth() const {
 		return shadow_depth;
 	}
+	bool get_clear_depth() const {
+		return clear_depth;
+	}
+	void set_clear_depth(bool p_clear_depth) {
+		clear_depth = p_clear_depth;
+	}
 
 	RID shadow_depth = RID();
+	bool clear_depth;
 };
 
 #endif // RENDER_DATA_RD_H

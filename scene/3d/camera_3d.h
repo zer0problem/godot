@@ -151,6 +151,8 @@ public:
 	// HACK: TI - camera scissor
 	void set_use_scissor(bool p_use_scissor);
 	void set_scissor_rect(Rect2i p_scissor_rect);
+	// HACK: TI - camera culling planes
+	void set_custom_culling_planes(const PackedVector4Array &p_planes);
 
 	void set_perspective(real_t p_fovy_degrees, real_t p_z_near, real_t p_z_far);
 	void set_orthogonal(real_t p_size, real_t p_z_near, real_t p_z_far);

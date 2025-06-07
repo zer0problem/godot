@@ -86,6 +86,8 @@ private:
 		uint64_t clear_frame[6] = { 0 };
 		uint64_t coverage_per_frame[2] = { 0 };
 		uint64_t version = 0;
+		// HACK: TI - custom culling planes
+		Vector<Plane> culling_planes;
 
 		Dependency dependency;
 	};
@@ -632,6 +634,10 @@ public:
 	virtual uint32_t light_get_cull_mask(RID p_light) const override;
 
 	Dependency *light_get_dependency(RID p_light) const;
+
+	// HACK: TI - Custom culling planes
+	virtual Vector<Plane> light_get_custom_culling_planes(RID p_light) const override;
+	virtual void light_set_custom_culling_planes(RID p_light, const Vector<Plane> &p_planes) override;
 
 	/* LIGHT INSTANCE API */
 

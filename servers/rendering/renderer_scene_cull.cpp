@@ -102,6 +102,17 @@ Rect2i RendererSceneCull::camera_get_scissor_rect(RID p_camera) const {
 	return camera->scissor_rect;
 }
 
+void RendererSceneCull::camera_set_custom_culling_planes(RID p_camera, const Vector<Plane> &p_planes) {
+	Camera *camera = camera_owner.get_or_null(p_camera);
+	ERR_FAIL_NULL(camera);
+	camera->custom_culling_planes = p_planes;
+}
+
+Vector<Plane> RendererSceneCull::camera_get_custom_culling_planes(RID p_camera) const {
+	Camera *camera = camera_owner.get_or_null(p_camera);
+	return camera->custom_culling_planes;
+}
+
 void RendererSceneCull::camera_set_perspective(RID p_camera, float p_fovy_degrees, float p_z_near, float p_z_far) {
 	Camera *camera = camera_owner.get_or_null(p_camera);
 	ERR_FAIL_NULL(camera);
@@ -2626,10 +2637,13 @@ bool RendererSceneCull::_light_instance_update_shadow(Instance *p_instance, cons
 			real_t angle = RSG::light_storage->light_get_param(p_instance->base, RS::LIGHT_PARAM_SPOT_ANGLE);
 			real_t z_near = MIN(0.005f, radius);
 
+
 			Projection cm;
 			cm.set_perspective(angle * 2.0, 1.0, z_near, radius);
-
-			Vector<Plane> planes = cm.get_projection_planes(light_transform);
+			Vector<Plane> planes = RSG::light_storage->light_get_custom_culling_planes(p_instance->base);
+			if (planes.size() == 0) {
+				planes = cm.get_projection_planes(light_transform);
+			}
 
 			instance_shadow_cull_result.clear();
 
@@ -2801,6 +2815,8 @@ void RendererSceneCull::render_camera(const Ref<RenderSceneBuffers> &p_render_bu
 
 	camera_data.use_scissor = use_scissor;
 	camera_data.scissor_rect = scissor_rect;
+
+	camera_data.custom_culling_planes = RS::get_singleton()->camera_get_custom_culling_planes(p_camera);
 
 	_render_scene(&camera_data, p_render_buffers, environment, camera->attributes, compositor, camera->visible_layers, p_scenario, p_viewport, p_shadow_atlas, RID(), -1, p_screen_mesh_lod_threshold, true, r_render_info);
 #endif
@@ -3254,8 +3270,13 @@ void RendererSceneCull::_render_scene(const RendererSceneRender::CameraData *p_c
 
 	/* STEP 2 - CULL */
 
-	Vector<Plane> planes = p_camera_data->main_projection.get_projection_planes(p_camera_data->main_transform);
-	cull.frustum = Frustum(planes);
+	if (p_camera_data->custom_culling_planes.size() > 0) {
+		cull.frustum = Frustum(p_camera_data->custom_culling_planes);
+	} else {
+		Vector<Plane> planes = p_camera_data->main_projection.get_projection_planes(p_camera_data->main_transform);
+		cull.frustum = Frustum(planes);
+	}
+
 
 	Vector<RID> directional_lights;
 	// directional lights
@@ -4600,4 +4621,12 @@ RendererSceneCull::~RendererSceneCull() {
 		memdelete(light_culler);
 		light_culler = nullptr;
 	}
+}
+
+void RendererSceneCull::clear() {
+	for (InstanceCullResult *buffer : scene_cull_result_buffer) {
+		buffer->reset();
+		delete buffer;
+	}
+	scene_cull_result_buffer.clear();
 }

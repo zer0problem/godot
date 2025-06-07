@@ -327,6 +327,14 @@ void Camera3D::set_scissor_rect(Rect2i p_scissor_rect) {
 	RenderingServer::get_singleton()->camera_set_scissor_rect(camera, p_scissor_rect);
 }
 
+void Camera3D::set_custom_culling_planes(const PackedVector4Array &p_planes) {
+	Vector<Plane> planes;
+	for (auto v4 : p_planes) {
+		planes.append(Plane(Vector3(v4.x, v4.y, v4.z), v4.w));
+	}
+	RenderingServer::get_singleton()->camera_set_custom_culling_planes(camera, planes);
+}
+
 void Camera3D::set_perspective(real_t p_fovy_degrees, real_t p_z_near, real_t p_z_far) {
 	if (!force_change && fov == p_fovy_degrees && p_z_near == _near && p_z_far == _far && mode == PROJECTION_PERSPECTIVE) {
 		return;
@@ -662,6 +670,8 @@ void Camera3D::_bind_methods() {
 	// HACK: TI - Camera scissor
 	ClassDB::bind_method(D_METHOD("set_use_scissor", "use_scissor"), &Camera3D::set_use_scissor);
 	ClassDB::bind_method(D_METHOD("set_scissor_rect", "rect"), &Camera3D::set_scissor_rect);
+	// HACK: TI - Camera culling planes
+	ClassDB::bind_method(D_METHOD("set_custom_culling_planes", "planes"), &Camera3D::set_custom_culling_planes);
 
 	ClassDB::bind_method(D_METHOD("set_perspective", "fov", "z_near", "z_far"), &Camera3D::set_perspective);
 	ClassDB::bind_method(D_METHOD("set_orthogonal", "size", "z_near", "z_far"), &Camera3D::set_orthogonal);

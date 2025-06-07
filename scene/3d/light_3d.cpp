@@ -530,6 +530,14 @@ Light3D::Light3D(RenderingServer::LightType p_type) {
 	set_disable_scale(true);
 }
 
+void Light3D::set_custom_culling_planes(const PackedVector4Array &p_planes) {
+	Vector<Plane> planes;
+	for (auto v4 : p_planes) {
+		planes.append(Plane(Vector3(v4.x, v4.y, v4.z), v4.w));
+	}
+	RS::get_singleton()->light_set_custom_culling_planes(light, planes);
+}
+
 Light3D::Light3D() {
 	ERR_PRINT("Light3D should not be instantiated directly; use the DirectionalLight3D, OmniLight3D or SpotLight3D subtypes instead.");
 }
