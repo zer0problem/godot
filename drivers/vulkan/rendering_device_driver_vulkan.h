@@ -212,6 +212,8 @@ public:
 	struct TextureInfo {
 		VkImage vk_image = VK_NULL_HANDLE;
 		VkImageView vk_view = VK_NULL_HANDLE;
+		// HACK: TI - Stencils..
+		VkImageView vk_stencil_view = VK_NULL_HANDLE;
 		DataFormat rd_format = DATA_FORMAT_MAX;
 		VkImageCreateInfo vk_create_info = {};
 		VkImageViewCreateInfo vk_view_create_info = {};

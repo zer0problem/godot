@@ -800,6 +800,9 @@ void SceneShaderForwardClustered::init(const String p_defines) {
 		actions.renames["CLIP_DISTANCE3"] = "gl_ClipDistance[3]";
 		actions.renames["CLIP_DISTANCE4"] = "gl_ClipDistance[4]";
 		actions.renames["CLIP_DISTANCE5"] = "gl_ClipDistance[5]";
+		// NOTE: TI - Expose stencil in lights
+		actions.renames["LIGHT_STENCIL"] = "light_stencil";
+		actions.usage_defines["LIGHT_STENCIL"] = "#define LIGHT_STENCIL_USED\n";
 
 		actions.usage_defines["NORMAL"] = "#define NORMAL_USED\n";
 		actions.usage_defines["TANGENT"] = "#define TANGENT_USED\n";

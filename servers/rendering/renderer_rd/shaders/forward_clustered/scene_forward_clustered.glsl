@@ -2401,6 +2401,9 @@ void fragment_shader(in SceneData scene_data) {
 					binormal,
 					tangent, anisotropy,
 #endif
+#ifdef LIGHT_STENCIL_USED
+					0,
+#endif // LIGHT_STENCIL_USED
 #ifdef LIGHT_MASK_USED
 					directional_lights.data[i].mask,
 #endif // LIGHT_MASK_USED

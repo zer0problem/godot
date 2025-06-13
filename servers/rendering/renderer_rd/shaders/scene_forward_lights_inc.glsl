@@ -58,6 +58,9 @@ void light_compute(vec3 N, vec3 L, vec3 V, float A, vec3 light_color, bool is_di
 #ifdef LIGHT_ANISOTROPY_USED
 		vec3 B, vec3 T, float anisotropy,
 #endif
+#ifdef LIGHT_STENCIL_USED
+		uint light_stencil,
+#endif // LIGHT_STENCIL_USED
 #ifdef LIGHT_MASK_USED
 		uint light_mask,
 #endif // LIGHT_MASK_USED
@@ -676,6 +679,9 @@ void light_process_omni(uint idx, vec3 vertex, vec3 eye_vec, vec3 normal, vec3 v
 #ifdef LIGHT_ANISOTROPY_USED
 			binormal, tangent, anisotropy,
 #endif
+#ifdef LIGHT_STENCIL_USED
+			0,
+#endif // LIGHT_STENCIL_USED
 #ifdef LIGHT_MASK_USED
 			light_mask,
 #endif // LIGHT_MASK_USED
@@ -748,6 +754,9 @@ void light_process_spot(uint idx, vec3 vertex, vec3 eye_vec, vec3 normal, vec3 v
 	}
 
 	float shadow = 1.0;
+#ifdef LIGHT_STENCIL_USED
+	uint light_stencil = 0;
+#endif // LIGHT_STENCIL_USED
 #ifndef SHADOWS_DISABLED
 	// Spot light shadow.
 	if (spot_attenuation > EPSILON && spot_lights.data[idx].shadow_opacity > 0.001) {
@@ -767,6 +776,10 @@ void light_process_spot(uint idx, vec3 vertex, vec3 eye_vec, vec3 normal, vec3 v
 			float z_norm = dot(spot_dir, -light_rel_vec) * spot_lights.data[idx].inv_radius;
 
 			vec2 shadow_uv = splane.xy * spot_lights.data[idx].atlas_rect.zw + spot_lights.data[idx].atlas_rect.xy;
+#ifdef LIGHT_STENCIL_USED
+			// HACK: TI - stencil shadows
+			light_stencil = textureLod(usampler2D(stencil_buffer, SAMPLER_NEAREST_CLAMP), shadow_uv.xy, 0.0).r;
+#endif // LIGHT_STENCIL_USED
 
 			float blocker_count = 0.0;
 			float blocker_average = 0.0;
@@ -815,6 +828,10 @@ void light_process_spot(uint idx, vec3 vertex, vec3 eye_vec, vec3 normal, vec3 v
 			//hard shadow
 			vec3 shadow_uv = vec3(splane.xy * spot_lights.data[idx].atlas_rect.zw + spot_lights.data[idx].atlas_rect.xy, splane.z);
 			shadow = mix(1.0, sample_pcf_shadow(shadow_atlas, spot_lights.data[idx].soft_shadow_scale * scene_data_block.data.shadow_atlas_pixel_size, shadow_uv, taa_frame_count), spot_lights.data[idx].shadow_opacity);
+#ifdef LIGHT_STENCIL_USED
+			// HACK: TI - stencil shadows
+			light_stencil = textureLod(usampler2D(stencil_buffer, SAMPLER_NEAREST_CLAMP), shadow_uv.xy, 0.0).r;
+#endif // LIGHT_STENCIL_USED
 		}
 	}
 #endif // SHADOWS_DISABLED
@@ -888,6 +905,9 @@ void light_process_spot(uint idx, vec3 vertex, vec3 eye_vec, vec3 normal, vec3 v
 #ifdef LIGHT_ANISOTROPY_USED
 			binormal, tangent, anisotropy,
 #endif
+#ifdef LIGHT_STENCIL_USED
+			light_stencil,
+#endif // LIGHT_STENCIL_USED
 #ifdef LIGHT_MASK_USED
 			light_mask,
 #endif // LIGHT_MASK_USED

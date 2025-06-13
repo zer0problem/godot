@@ -1800,6 +1800,30 @@ RDD::TextureID RenderingDeviceDriverVulkan::texture_create(const TextureFormat &
 		image_view_create_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 	}
 
+	// HACK: TI - Stencil...
+	VkImageView stencil_vk_image_view = VK_NULL_HANDLE;
+	if ((p_format.usage_bits & TEXTURE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT)) {
+		VkImageViewCreateInfo stencil_image_view_create_info = {};
+		stencil_image_view_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+		stencil_image_view_create_info.image = vk_image;
+		stencil_image_view_create_info.viewType = (VkImageViewType)p_format.texture_type;
+		stencil_image_view_create_info.format = RD_TO_VK_FORMAT[p_view.format];
+		stencil_image_view_create_info.components.r = (VkComponentSwizzle)p_view.swizzle_r;
+		stencil_image_view_create_info.components.g = (VkComponentSwizzle)p_view.swizzle_g;
+		stencil_image_view_create_info.components.b = (VkComponentSwizzle)p_view.swizzle_b;
+		stencil_image_view_create_info.components.a = (VkComponentSwizzle)p_view.swizzle_a;
+		stencil_image_view_create_info.subresourceRange.levelCount = create_info.mipLevels;
+		stencil_image_view_create_info.subresourceRange.layerCount = create_info.arrayLayers;
+		stencil_image_view_create_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_STENCIL_BIT;
+
+		err = vkCreateImageView(vk_device, &stencil_image_view_create_info, VKC::get_allocation_callbacks(VK_OBJECT_TYPE_IMAGE_VIEW), &stencil_vk_image_view);
+		if (err) {
+			vkDestroyImage(vk_device, vk_image, VKC::get_allocation_callbacks(VK_OBJECT_TYPE_IMAGE));
+			vmaFreeMemory(allocator, allocation);
+			ERR_FAIL_COND_V_MSG(err, TextureID(), "vkCreateImageView failed with error " + itos(err) + ".");
+		}
+	}
+
 	VkImageViewASTCDecodeModeEXT decode_mode;
 	if (enabled_device_extension_names.has(VK_EXT_ASTC_DECODE_MODE_EXTENSION_NAME)) {
 		if (image_view_create_info.format >= VK_FORMAT_ASTC_4x4_UNORM_BLOCK && image_view_create_info.format <= VK_FORMAT_ASTC_12x12_SRGB_BLOCK) {
@@ -1823,6 +1847,7 @@ RDD::TextureID RenderingDeviceDriverVulkan::texture_create(const TextureFormat &
 	TextureInfo *tex_info = VersatileResource::allocate<TextureInfo>(resources_allocator);
 	tex_info->vk_image = vk_image;
 	tex_info->vk_view = vk_image_view;
+	tex_info->vk_stencil_view = stencil_vk_image_view;
 	tex_info->rd_format = p_format.format;
 	tex_info->vk_create_info = create_info;
 	tex_info->vk_view_create_info = image_view_create_info;
@@ -1987,6 +2012,9 @@ RDD::TextureID RenderingDeviceDriverVulkan::texture_create_shared_from_slice(Tex
 
 void RenderingDeviceDriverVulkan::texture_free(TextureID p_texture) {
 	TextureInfo *tex_info = (TextureInfo *)p_texture.id;
+	if (tex_info->vk_stencil_view != VK_NULL_HANDLE) {
+		vkDestroyImageView(vk_device, tex_info->vk_stencil_view, VKC::get_allocation_callbacks(VK_OBJECT_TYPE_IMAGE_VIEW));
+	}
 	vkDestroyImageView(vk_device, tex_info->vk_view, VKC::get_allocation_callbacks(VK_OBJECT_TYPE_IMAGE_VIEW));
 	if (tex_info->allocation.handle) {
 		vkDestroyImage(vk_device, tex_info->vk_image, VKC::get_allocation_callbacks(VK_OBJECT_TYPE_BUFFER));
@@ -4029,7 +4057,12 @@ RDD::UniformSetID RenderingDeviceDriverVulkan::uniform_set_create(VectorView<Bou
 					}
 #endif
 					vk_img_infos[j] = {};
-					vk_img_infos[j].imageView = ((const TextureInfo *)uniform.ids[j].id)->vk_view;
+					// HACK: TI - Stencil, really I should do something not this
+					if (uniform.binding == 35) {
+						vk_img_infos[j].imageView = ((const TextureInfo *)uniform.ids[j].id)->vk_stencil_view;
+					} else {
+						vk_img_infos[j].imageView = ((const TextureInfo *)uniform.ids[j].id)->vk_view;
+					}
 					vk_img_infos[j].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 				}
 

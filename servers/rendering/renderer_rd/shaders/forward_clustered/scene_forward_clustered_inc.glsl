@@ -443,6 +443,9 @@ layout(set = 1, binding = 34) uniform texture2DArray ssil_buffer;
 layout(set = 1, binding = 34) uniform texture2D ssil_buffer;
 #endif // USE_MULTIVIEW
 
+// HACK: TI - Stencil buffers...
+layout(set = 1, binding = 35) uniform utexture2D stencil_buffer;
+
 #endif
 
 vec4 normal_roughness_compatibility(vec4 p_normal_roughness) {
