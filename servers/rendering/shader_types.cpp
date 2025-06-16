@@ -213,7 +213,7 @@ ShaderTypes::ShaderTypes() {
 	shader_modes[RS::SHADER_SPATIAL].functions["light"].built_ins["LIGHT_MASK"] = constt(ShaderLanguage::TYPE_UINT);
 	shader_modes[RS::SHADER_SPATIAL].functions["light"].built_ins["LIGHT_VISIBLE_LAYERS"] = constt(ShaderLanguage::TYPE_UINT);
 	// NOTE: TI - Expose light_stencil
-	shader_modes[RS::SHADER_SPATIAL].functions["light"].built_ins["LIGHT_STENCIL"] = constt(ShaderLanguage::TYPE_UINT);
+	shader_modes[RS::SHADER_SPATIAL].functions["light"].built_ins["LIGHT_STENCIL"] = constt(ShaderLanguage::TYPE_UVEC4);
 
 	shader_modes[RS::SHADER_SPATIAL].functions["light"].can_discard = true;
 	shader_modes[RS::SHADER_SPATIAL].functions["light"].main_function = true;

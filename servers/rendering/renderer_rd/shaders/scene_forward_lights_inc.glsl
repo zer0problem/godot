@@ -59,7 +59,7 @@ void light_compute(vec3 N, vec3 L, vec3 V, float A, vec3 light_color, bool is_di
 		vec3 B, vec3 T, float anisotropy,
 #endif
 #ifdef LIGHT_STENCIL_USED
-		uint light_stencil,
+		uvec4 light_stencil,
 #endif // LIGHT_STENCIL_USED
 #ifdef LIGHT_MASK_USED
 		uint light_mask,
@@ -680,7 +680,7 @@ void light_process_omni(uint idx, vec3 vertex, vec3 eye_vec, vec3 normal, vec3 v
 			binormal, tangent, anisotropy,
 #endif
 #ifdef LIGHT_STENCIL_USED
-			0,
+			uvec4(0, 0, 0, 0),
 #endif // LIGHT_STENCIL_USED
 #ifdef LIGHT_MASK_USED
 			light_mask,
@@ -755,7 +755,7 @@ void light_process_spot(uint idx, vec3 vertex, vec3 eye_vec, vec3 normal, vec3 v
 
 	float shadow = 1.0;
 #ifdef LIGHT_STENCIL_USED
-	uint light_stencil = 0;
+	uvec4 light_stencil = uvec4(0, 0, 0, 0);
 #endif // LIGHT_STENCIL_USED
 #ifndef SHADOWS_DISABLED
 	// Spot light shadow.
@@ -778,7 +778,12 @@ void light_process_spot(uint idx, vec3 vertex, vec3 eye_vec, vec3 normal, vec3 v
 			vec2 shadow_uv = splane.xy * spot_lights.data[idx].atlas_rect.zw + spot_lights.data[idx].atlas_rect.xy;
 #ifdef LIGHT_STENCIL_USED
 			// HACK: TI - stencil shadows
-			light_stencil = textureLod(usampler2D(stencil_buffer, SAMPLER_NEAREST_CLAMP), shadow_uv.xy, 0.0).r;
+			vec2 stencil_uv = shadow_uv - vec2(0.5 / 4096.0, 0.5 / 4096.0);
+			light_stencil.x = textureOffset(usampler2D(stencil_buffer, SAMPLER_NEAREST_CLAMP), stencil_uv.xy, ivec2(0, 0)).r;
+			light_stencil.y = textureOffset(usampler2D(stencil_buffer, SAMPLER_NEAREST_CLAMP), stencil_uv.xy, ivec2(0, 1)).r;
+			light_stencil.z = textureOffset(usampler2D(stencil_buffer, SAMPLER_NEAREST_CLAMP), stencil_uv.xy, ivec2(1, 1)).r;
+			light_stencil.w = textureOffset(usampler2D(stencil_buffer, SAMPLER_NEAREST_CLAMP), stencil_uv.xy, ivec2(1, 0)).r;
+			//light_stencil = textureLod(usampler2D(stencil_buffer, SAMPLER_NEAREST_CLAMP), shadow_uv.xy, 0.0).r;
 #endif // LIGHT_STENCIL_USED
 
 			float blocker_count = 0.0;
@@ -830,7 +835,12 @@ void light_process_spot(uint idx, vec3 vertex, vec3 eye_vec, vec3 normal, vec3 v
 			shadow = mix(1.0, sample_pcf_shadow(shadow_atlas, spot_lights.data[idx].soft_shadow_scale * scene_data_block.data.shadow_atlas_pixel_size, shadow_uv, taa_frame_count), spot_lights.data[idx].shadow_opacity);
 #ifdef LIGHT_STENCIL_USED
 			// HACK: TI - stencil shadows
-			light_stencil = textureLod(usampler2D(stencil_buffer, SAMPLER_NEAREST_CLAMP), shadow_uv.xy, 0.0).r;
+			vec2 stencil_uv = shadow_uv.xy - vec2(0.5 / 4096.0, 0.5 / 4096.0);
+			light_stencil.x = textureOffset(usampler2D(stencil_buffer, SAMPLER_NEAREST_CLAMP), stencil_uv.xy, ivec2(0, 0)).r;
+			light_stencil.y = textureOffset(usampler2D(stencil_buffer, SAMPLER_NEAREST_CLAMP), stencil_uv.xy, ivec2(0, 1)).r;
+			light_stencil.z = textureOffset(usampler2D(stencil_buffer, SAMPLER_NEAREST_CLAMP), stencil_uv.xy, ivec2(1, 1)).r;
+			light_stencil.w = textureOffset(usampler2D(stencil_buffer, SAMPLER_NEAREST_CLAMP), stencil_uv.xy, ivec2(1, 0)).r;
+			//light_stencil = textureLod(usampler2D(stencil_buffer, SAMPLER_NEAREST_CLAMP), shadow_uv.xy, 0.0).r;
 #endif // LIGHT_STENCIL_USED
 		}
 	}
